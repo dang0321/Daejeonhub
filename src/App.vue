@@ -1,28 +1,40 @@
 <script setup>
 import Header from './components/common/Header.vue'
-import Sidebar from './components/common/Sidebar.vue'
+import Footer from './components/common/Footer.vue'
 </script>
 
 <template>
-  <div id="app">
+  <div id="app" class="app-layout">
     <Header />
-    <div class="main-layout">
-      <Sidebar />
-      <main class="content">
-        <RouterView />  <!-- ← 페이지 렌더링 위치 -->
-      </main>
-    </div>
+    <main class="main-content">
+      <RouterView />
+    </main>
+    <Footer />
   </div>
 </template>
 
 <style scoped>
-.main-layout {
-  display: flex;
-  min-height: calc(100vh - 60px);
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-.content {
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-content {
   flex: 1;
-  padding: 20px;
+  width: 100%;
+  overflow-y: auto;
 }
 </style>
