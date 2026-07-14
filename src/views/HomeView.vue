@@ -1,11 +1,10 @@
 <script setup>
 const regions = [
-  { name: '중구', description: '도심 중심지' },
-  { name: '동구', description: '동부 지역' },
-  { name: '서구', description: '서부 지역' },
-  { name: '남구', description: '남부 지역' },
-  { name: '북구', description: '북부 지역' },
-  { name: '유성구', description: '유성 지역' }
+  { name: '동구',   description: '대전 동부' },
+  { name: '중구',   description: '대전 중심부' },
+  { name: '서구',   description: '대전 서부' },
+  { name: '유성구', description: '대전 북서부 · 관광지 밀집' },
+  { name: '대덕구', description: '대전 북부' }
 ]
 
 const services = [
