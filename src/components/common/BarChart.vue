@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { Chart, BarController, BarElement, CategoryScale, LinearScale, Tooltip, Legend } from 'chart.js'
+import { fetchDashboardStats } from '../../services/dashboardService'
 
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip, Legend)
 
@@ -16,18 +17,7 @@ const props = defineProps({
 })
 
 const chartCanvas = ref(null)
-
-const chartData = {
-  labels: ['관광지', '맛집', '숙박', '문화시설', '쇼핑'],
-  datasets: [
-    {
-      label: '비율',
-      data: [40, 20, 15, 15, 10],
-      backgroundColor: ['#4f46e5', '#f59e0b', '#14b8a6', '#8b5cf6', '#ef4444'],
-      borderRadius: 8
-    }
-  ]
-}
+let chartInstance = null
 
 const chartOptions = {
   responsive: true,
@@ -50,14 +40,40 @@ const chartOptions = {
   }
 }
 
-onMounted(() => {
-  if (chartCanvas.value) {
-    new Chart(chartCanvas.value, {
-      type: 'bar',
-      data: chartData,
-      options: chartOptions
-    })
+const updateChartData = async () => {
+  const stats = await fetchDashboardStats()
+  const categoryCounts = stats?.categoryCount || {}
+  const labels = Object.keys(categoryCounts)
+  const values = Object.values(categoryCounts)
+
+  if (!chartCanvas.value) return
+
+  if (chartInstance) {
+    chartInstance.data.labels = labels
+    chartInstance.data.datasets[0].data = values
+    chartInstance.update()
+    return
   }
+
+  chartInstance = new Chart(chartCanvas.value, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: '비율',
+          data: values,
+          backgroundColor: ['#4f46e5', '#f59e0b', '#14b8a6', '#8b5cf6', '#ef4444'],
+          borderRadius: 8
+        }
+      ]
+    },
+    options: chartOptions
+  })
+}
+
+onMounted(() => {
+  updateChartData()
 })
 </script>
 

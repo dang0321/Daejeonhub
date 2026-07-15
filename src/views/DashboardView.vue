@@ -1,15 +1,38 @@
 <script setup>
+import { ref, onMounted } from 'vue'
 import DashboardCard from '../components/common/DashboardCard.vue'
 import PieChart from '../components/common/PieChart.vue'
 import BarChart from '../components/common/BarChart.vue'
+import { fetchDashboardStats } from '../services/dashboardService'
 
-const stats = [
-  { title: '게시글 수', value: '18', icon: '📝' },
-  { title: '좋아요 수', value: '245', icon: '❤️' },
-  { title: '관광 데이터 수', value: '512', icon: '🏛️' },
-  { title: '카테고리 수', value: '5', icon: '📂' },
-  { title: '대표 카테고리', value: '관광지', icon: '⭐' }
-]
+const stats = ref([
+  { title: '게시글 수', value: '0', icon: '📝' },
+  { title: '좋아요 수', value: '0', icon: '❤️' },
+  { title: '관광 데이터 수', value: '0', icon: '🏛️' },
+  { title: '카테고리 수', value: '0', icon: '📂' },
+  { title: '대표 카테고리', value: '-', icon: '⭐' }
+])
+
+onMounted(async () => {
+  try {
+    const dashboardData = await fetchDashboardStats()
+    const topCategoryEntry = (dashboardData?.categoryRatio || []).reduce((max, item) => {
+      if (!max || item.ratio > max.ratio) return item
+      return max
+    }, null)
+    const topCategory = topCategoryEntry?.label || '-'
+
+    stats.value = [
+      { title: '게시글 수', value: String(dashboardData?.boardCount ?? 0), icon: '📝' },
+      { title: '좋아요 수', value: String(dashboardData?.totalLikes ?? 0), icon: '❤️' },
+      { title: '관광 데이터 수', value: String(dashboardData?.totalTourismCount ?? 0), icon: '🏛️' },
+      { title: '카테고리 수', value: String(dashboardData?.categoryTypeCount ?? 0), icon: '📂' },
+      { title: '대표 카테고리', value: topCategory, icon: '⭐' }
+    ]
+  } catch (error) {
+    console.error('대시보드 통계 로드 실패:', error)
+  }
+})
 
 </script>
 

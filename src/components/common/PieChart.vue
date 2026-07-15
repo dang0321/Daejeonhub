@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { Chart, DoughnutController, ArcElement, Tooltip, Legend } from 'chart.js'
+import { fetchDashboardStats } from '../../services/dashboardService'
 
 Chart.register(DoughnutController, ArcElement, Tooltip, Legend)
 
@@ -16,12 +17,13 @@ const props = defineProps({
 })
 
 const chartCanvas = ref(null)
+let chartInstance = null
 
 const chartData = {
   labels: ['관광지', '맛집', '숙박', '문화시설', '쇼핑'],
   datasets: [
     {
-      data: [40, 20, 15, 15, 10],
+      data: [0, 0, 0, 0, 0],
       backgroundColor: ['#4f46e5', '#f59e0b', '#14b8a6', '#8b5cf6', '#ef4444'],
       borderWidth: 0
     }
@@ -41,14 +43,40 @@ const chartOptions = {
   }
 }
 
-onMounted(() => {
-  if (chartCanvas.value) {
-    new Chart(chartCanvas.value, {
-      type: 'doughnut',
-      data: chartData,
-      options: chartOptions
-    })
+const updateChartData = async () => {
+  const stats = await fetchDashboardStats()
+  const ratios = stats?.tourismTypeRatio || []
+
+  if (!chartCanvas.value) return
+
+  const labels = ratios.map((item) => item.label)
+  const values = ratios.map((item) => item.ratio)
+
+  if (chartInstance) {
+    chartInstance.data.labels = labels
+    chartInstance.data.datasets[0].data = values
+    chartInstance.update()
+    return
   }
+
+  chartInstance = new Chart(chartCanvas.value, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [
+        {
+          data: values,
+          backgroundColor: ['#4f46e5', '#f59e0b', '#14b8a6', '#8b5cf6', '#ef4444'],
+          borderWidth: 0
+        }
+      ]
+    },
+    options: chartOptions
+  })
+}
+
+onMounted(() => {
+  updateChartData()
 })
 </script>
 
