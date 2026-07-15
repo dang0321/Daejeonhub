@@ -2,7 +2,7 @@
   <div class="board-page">
     <header class="board-header">
       <h1>게시판</h1>
-      <div class="board-actions">
+      <div class="board-actions" v-if="!selectedBoard">
         <input
           v-model="searchTerm"
           type="search"
@@ -14,41 +14,103 @@
     </header>
 
     <section class="board-content">
-      <aside class="board-list-wrapper">
-        <h2>게시글 목록</h2>
+      <section class="board-list-wrapper" v-if="!selectedBoard">
         <div v-if="filteredBoards.length === 0" class="empty-state">
           등록된 게시글이 없습니다.
         </div>
-        <ul class="board-list">
+
+        <ul v-else class="board-list">
           <li
-            v-for="board in filteredBoards"
+            v-for="board in pagedBoards"
             :key="board.id"
             :class="{ active: selectedBoard && selectedBoard.id === board.id }"
             @click="selectBoard(board.id)"
           >
-            <strong>{{ board.title }}</strong>
-            <span>{{ formatDate(board.createdAt) }}</span>
+            <div class="board-item-main">
+              <strong>{{ board.title }}</strong>
+              <p>{{ board.content }}</p>
+            </div>
+            <span class="board-item-meta">{{ formatDate(board.createdAt) }}</span>
           </li>
         </ul>
-      </aside>
 
-      <section class="board-detail" v-if="selectedBoard">
-        <h2>게시글 상세</h2>
+        <div v-if="filteredBoards.length > 0" class="pagination">
+          <button
+            type="button"
+            class="page-button"
+            :disabled="currentPage === 1"
+            @click="goToPage(1)"
+          >
+            ««
+          </button>
+
+          <button
+            type="button"
+            class="page-button"
+            :disabled="currentPage === 1"
+            @click="currentPage -= 1"
+          >
+            이전
+          </button>
+
+          <div class="page-number-group">
+            <button
+              v-for="page in pageNumbers"
+              :key="page"
+              type="button"
+              class="page-number"
+              :class="{ active: currentPage === page }"
+              @click="goToPage(page)"
+            >
+              {{ page }}
+            </button>
+          </div>
+
+          <button
+            type="button"
+            class="page-button"
+            :disabled="currentPage === totalPages"
+            @click="currentPage += 1"
+          >
+            다음
+          </button>
+
+          <button
+            type="button"
+            class="page-button"
+            :disabled="currentPage === totalPages"
+            @click="goToPage(totalPages)"
+          >
+            »»
+          </button>
+        </div>
+      </section>
+
+      <section class="board-detail" v-else>
+        <div class="detail-toolbar">
+          <button type="button" class="secondary-button" @click="clearSelection">목록으로</button>
+        </div>
+
         <div class="detail-card">
           <div class="detail-heading">
-            <h3>{{ selectedBoard.title }}</h3>
-            <span>{{ formatDate(selectedBoard.createdAt) }}</span>
+            <div class="detail-title-wrap">
+              <h3>{{ selectedBoard.title }}</h3>
+            </div>
+            <div class="detail-date-wrap">
+              <span class="detail-date-label">작성일</span>
+              <span class="detail-date">{{ formatDate(selectedBoard.createdAt) }}</span>
+            </div>
           </div>
-          <p class="detail-content">{{ selectedBoard.content }}</p>
+
+          <div class="detail-body">
+            <p class="detail-content">{{ selectedBoard.content }}</p>
+          </div>
+
           <div class="detail-actions">
             <button class="secondary-button" @click="openEditModal">수정</button>
             <button class="danger-button" @click="openDeleteModal">삭제</button>
           </div>
         </div>
-      </section>
-
-      <section class="board-detail placeholder" v-else>
-        <h2>게시글을 선택하세요</h2>
       </section>
     </section>
 
@@ -99,7 +161,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import {
   listBoards,
   createBoard,
@@ -115,6 +177,8 @@ const modalMode = ref('create')
 const form = ref({ title: '', content: '', password: '' })
 const deletePassword = ref('')
 const boards = ref(listBoards())
+const pageSize = 5
+const currentPage = ref(1)
 
 const filteredBoards = computed(() => {
   const normalized = searchTerm.value.trim().toLowerCase()
@@ -134,6 +198,21 @@ const filteredBoards = computed(() => {
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 })
 
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredBoards.value.length / pageSize)))
+
+const pagedBoards = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  return filteredBoards.value.slice(start, start + pageSize)
+})
+
+const pageNumbers = computed(() => {
+  const pages = []
+  for (let i = 1; i <= totalPages.value; i += 1) {
+    pages.push(i)
+  }
+  return pages
+})
+
 const selectedBoard = computed(() => {
   return boards.value.find((item) => item.id === selectedId.value) || null
 })
@@ -141,6 +220,15 @@ const selectedBoard = computed(() => {
 const modalTitle = computed(() =>
   modalMode.value === 'create' ? '게시글 작성' : '게시글 수정'
 )
+
+watch(searchTerm, () => {
+  currentPage.value = 1
+})
+
+function goToPage(page) {
+  if (page < 1 || page > totalPages.value) return
+  currentPage.value = page
+}
 
 function formatDate(value) {
   return new Date(value).toLocaleString('ko-KR', {
@@ -158,6 +246,10 @@ function refreshBoards() {
 
 function selectBoard(id) {
   selectedId.value = id
+}
+
+function clearSelection() {
+  selectedId.value = null
 }
 
 function openCreateModal() {
@@ -248,72 +340,158 @@ function confirmDelete() {
 
 <style scoped>
 .board-page {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 24px;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 24px 28px 40px;
+  min-height: 100%;
 }
 
 .board-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
   gap: 12px;
+  padding: 18px 0 20px;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .board-header h1 {
   margin: 0;
+  font-size: 1.2rem;
+  color: #111827;
 }
 
 .board-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .search-input {
-  min-width: 240px;
-  padding: 10px 12px;
-  border: 1px solid #d0d7de;
-  border-radius: 8px;
+  min-width: 260px;
+  padding: 9px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
 }
 
 .board-content {
-  display: grid;
-  grid-template-columns: 320px 1fr;
-  gap: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: start;
+  width: 100%;
 }
 
 .board-list-wrapper,
 .board-detail {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 18px;
+  width: 100%;
+  max-width: none;
+  background: transparent;
+  border: none;
+  padding: 20px 0;
+  min-height: 420px;
 }
 
 .board-list {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: grid;
+  gap: 8px;
 }
 
 .board-list li {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 14px 12px;
-  border-bottom: 1px solid #f2f4f7;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #cbd5e1;
   cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  border-radius: 6px;
 }
 
 .board-list li:last-child {
-  border-bottom: none;
+  border-bottom: 1px solid #cbd5e1;
 }
 
 .board-list li:hover,
 .board-list li.active {
-  background: #f3f5ff;
+  background: #eef2ff;
+  transform: translateX(2px);
+}
+
+.board-item-main {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.board-item-main strong {
+  font-size: 0.96rem;
+  color: #111827;
+}
+
+.board-item-main p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.board-item-meta {
+  color: #6b7280;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  margin-top: 2px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #f3f4f6;
+  flex-wrap: wrap;
+}
+
+.page-button,
+.page-number {
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #111827;
+  cursor: pointer;
+}
+
+.page-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-number.active {
+  background: #f3f4f6;
+  border-color: #cbd5e1;
+}
+
+.page-number-group {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.detail-toolbar {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 14px;
 }
 
 .detail-card {
@@ -324,59 +502,97 @@ function confirmDelete() {
 .detail-heading {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  gap: 12px;
+  align-items: flex-end;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.detail-title-wrap {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: flex-end;
+  min-width: 0;
+}
+
+.detail-heading h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.4;
+}
+
+.detail-date-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  color: #6b7280;
+  flex-shrink: 0;
+  padding-left: 12px;
+}
+
+.detail-date-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #9ca3af;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.detail-date {
+  font-size: 0.95rem;
+  color: #4b5563;
+  white-space: nowrap;
+}
+
+.detail-body {
+  border-top: 1px solid #f3f4f6;
+  padding-top: 16px;
 }
 
 .detail-content {
+  min-height: 240px;
   white-space: pre-wrap;
-  line-height: 1.7;
+  line-height: 1.9;
+  letter-spacing: 0.015em;
+  margin: 0;
+  color: #374151;
+  font-size: 1rem;
 }
 
 .detail-actions,
 .modal-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-}
-
-.placeholder {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 240px;
-  color: #6b7280;
+  gap: 10px;
 }
 
 .primary-button,
 .secondary-button,
 .danger-button {
-  padding: 10px 16px;
-  border: none;
-  border-radius: 8px;
+  padding: 9px 14px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #111827;
   cursor: pointer;
-  font-weight: 600;
-}
-
-.primary-button {
-  background: #2563eb;
-  color: white;
 }
 
 .secondary-button {
-  background: #e5e7eb;
-  color: #111827;
+  background: #f9fafb;
 }
 
 .danger-button {
-  background: #dc2626;
-  color: white;
+  background: #fdf2f2;
+  color: #991b1b;
+  border-color: #fecaca;
 }
 
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.35);
+  background: rgba(17, 24, 39, 0.25);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -387,9 +603,8 @@ function confirmDelete() {
 .modal-panel {
   width: min(560px, 100%);
   background: white;
-  border-radius: 16px;
+  border: 1px solid #e5e7eb;
   padding: 24px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
 }
 
 .modal-panel.small {
@@ -412,7 +627,6 @@ function confirmDelete() {
 .modal-form textarea {
   width: 100%;
   border: 1px solid #d1d5db;
-  border-radius: 10px;
   padding: 10px 12px;
   font-size: 14px;
 }
@@ -420,5 +634,27 @@ function confirmDelete() {
 .empty-state {
   color: #6b7280;
   padding: 24px 12px;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .board-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .board-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .board-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-input {
+    min-width: 0;
+  }
 }
 </style>
