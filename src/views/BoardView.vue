@@ -14,11 +14,16 @@
     </header>
 
     <section class="board-content">
-      <aside class="board-list-wrapper">
-        <h2>게시글 목록</h2>
+      <section class="board-list-wrapper" v-if="!selectedBoard">
+        <div class="panel-header">
+          <h2>게시글 목록</h2>
+          <p class="panel-subtitle">게시글을 선택하면 상세 내용을 확인할 수 있어요.</p>
+        </div>
+
         <div v-if="filteredBoards.length === 0" class="empty-state">
           등록된 게시글이 없습니다.
         </div>
+
         <ul class="board-list">
           <li
             v-for="board in filteredBoards"
@@ -26,29 +31,38 @@
             :class="{ active: selectedBoard && selectedBoard.id === board.id }"
             @click="selectBoard(board.id)"
           >
-            <strong>{{ board.title }}</strong>
-            <span>{{ formatDate(board.createdAt) }}</span>
+            <div class="board-item-main">
+              <strong>{{ board.title }}</strong>
+              <p>{{ board.content }}</p>
+            </div>
+            <span class="board-item-meta">{{ formatDate(board.createdAt) }}</span>
           </li>
         </ul>
-      </aside>
+      </section>
 
-      <section class="board-detail" v-if="selectedBoard">
-        <h2>게시글 상세</h2>
+      <section class="board-detail" v-else>
+        <div class="detail-toolbar">
+          <button type="button" class="secondary-button" @click="clearSelection">목록으로</button>
+        </div>
+
         <div class="detail-card">
           <div class="detail-heading">
-            <h3>{{ selectedBoard.title }}</h3>
-            <span>{{ formatDate(selectedBoard.createdAt) }}</span>
+            <div>
+              <p class="detail-label">게시글 상세</p>
+              <h3>{{ selectedBoard.title }}</h3>
+            </div>
+            <span class="detail-date">{{ formatDate(selectedBoard.createdAt) }}</span>
           </div>
-          <p class="detail-content">{{ selectedBoard.content }}</p>
+
+          <div class="detail-body">
+            <p class="detail-content">{{ selectedBoard.content }}</p>
+          </div>
+
           <div class="detail-actions">
             <button class="secondary-button" @click="openEditModal">수정</button>
             <button class="danger-button" @click="openDeleteModal">삭제</button>
           </div>
         </div>
-      </section>
-
-      <section class="board-detail placeholder" v-else>
-        <h2>게시글을 선택하세요</h2>
       </section>
     </section>
 
@@ -160,6 +174,10 @@ function selectBoard(id) {
   selectedId.value = id
 }
 
+function clearSelection() {
+  selectedId.value = null
+}
+
 function openCreateModal() {
   modalMode.value = 'create'
   form.value = { title: '', content: '', password: '' }
@@ -248,21 +266,30 @@ function confirmDelete() {
 
 <style scoped>
 .board-page {
-  max-width: 1100px;
+  max-width: 1180px;
   margin: 0 auto;
   padding: 24px;
+  background: linear-gradient(180deg, #f8fbff 0%, #f4f7fb 100%);
+  min-height: 100%;
 }
 
 .board-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
   gap: 12px;
+  padding: 20px 24px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
 }
 
 .board-header h1 {
   margin: 0;
+  font-size: 1.3rem;
+  color: #111827;
 }
 
 .board-actions {
@@ -272,39 +299,61 @@ function confirmDelete() {
 }
 
 .search-input {
-  min-width: 240px;
+  min-width: 260px;
   padding: 10px 12px;
   border: 1px solid #d0d7de;
-  border-radius: 8px;
+  border-radius: 10px;
+  background: #f9fafb;
 }
 
 .board-content {
-  display: grid;
-  grid-template-columns: 320px 1fr;
-  gap: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: start;
 }
 
 .board-list-wrapper,
 .board-detail {
+  width: min(760px, 100%);
   background: #fff;
   border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 18px;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.05);
+  min-height: 420px;
+}
+
+.panel-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.panel-subtitle {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.92rem;
 }
 
 .board-list {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: grid;
+  gap: 8px;
 }
 
 .board-list li {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 14px 12px;
-  border-bottom: 1px solid #f2f4f7;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 12px;
+  border-radius: 12px;
+  border: 1px solid transparent;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .board-list li:last-child {
@@ -313,7 +362,43 @@ function confirmDelete() {
 
 .board-list li:hover,
 .board-list li.active {
-  background: #f3f5ff;
+  background: #eef4ff;
+  border-color: #dbeafe;
+  transform: translateY(-1px);
+}
+
+.board-item-main {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.board-item-main strong {
+  font-size: 0.96rem;
+  color: #111827;
+}
+
+.board-item-main p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.board-item-meta {
+  color: #6b7280;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  margin-top: 2px;
+}
+
+.detail-toolbar {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 14px;
 }
 
 .detail-card {
@@ -324,13 +409,45 @@ function confirmDelete() {
 .detail-heading {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.detail-label {
+  margin: 0 0 6px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #2563eb;
+  text-transform: uppercase;
+}
+
+.detail-heading h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  color: #111827;
+}
+
+.detail-date {
+  color: #6b7280;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.detail-body {
+  background: #f8fafc;
+  border: 1px solid #edf2f7;
+  border-radius: 12px;
+  padding: 16px;
 }
 
 .detail-content {
   white-space: pre-wrap;
-  line-height: 1.7;
+  line-height: 1.8;
+  margin: 0;
+  color: #374151;
 }
 
 .detail-actions,
@@ -338,14 +455,6 @@ function confirmDelete() {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-}
-
-.placeholder {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 240px;
-  color: #6b7280;
 }
 
 .primary-button,
@@ -356,11 +465,18 @@ function confirmDelete() {
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .primary-button {
   background: #2563eb;
   color: white;
+}
+
+.primary-button:hover,
+.secondary-button:hover,
+.danger-button:hover {
+  transform: translateY(-1px);
 }
 
 .secondary-button {
@@ -420,5 +536,27 @@ function confirmDelete() {
 .empty-state {
   color: #6b7280;
   padding: 24px 12px;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .board-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .board-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .board-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-input {
+    min-width: 0;
+  }
 }
 </style>
