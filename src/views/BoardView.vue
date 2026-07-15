@@ -58,12 +58,12 @@
         </div>
 
         <div v-else class="board-table-container">
-          <!-- 📌 새롭게 추가된 게시판 테이블 헤더 (그리드 정렬 일치) -->
+          <!-- 게시판 테이블 헤더 -->
           <div class="board-table-header">
-            <span class="col-category">카테고리</span>
+            <span class="col-category">분류</span>
             <span class="col-title">제목</span>
             <span class="col-author">작성자</span>
-            <span class="col-date">작성일</span>
+            <span class="col-date">등록일</span>
           </div>
 
           <ul class="board-list">
@@ -74,7 +74,9 @@
               @click="selectBoard(board.id)"
             >
               <div class="col-category">
-                <span class="board-list-category">[{{ board.category }}]</span>
+                <span class="board-list-category" :class="getCategoryClass(board.category)">
+                  {{ board.category }}
+                </span>
               </div>
               <div class="col-title">
                 <strong class="board-item-title">{{ board.title }}</strong>
@@ -129,7 +131,7 @@
         <div class="detail-card">
           <div class="detail-heading">
             <div class="detail-title-wrap">
-              <span class="board-category">
+              <span class="board-category" :class="getCategoryClass(selectedBoard.category)">
                 {{ selectedBoard.category }}
               </span>
               <h3>{{ selectedBoard.title }}</h3>
@@ -137,7 +139,7 @@
             <div class="detail-date-wrap">
               <span class="detail-author">{{ selectedBoard.nickname }}</span>
               <span class="detail-date-label">작성일</span>
-              <span class="detail-date">{{ formatDate(selectedBoard.createdAt) }}</span>
+              <span class="detail-date">{{ formatFullDate(selectedBoard.createdAt) }}</span>
             </div>
           </div>
 
@@ -296,13 +298,54 @@ function goToPage(page) {
 }
 
 function formatDate(value) {
-  return new Date(value).toLocaleString('ko-KR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
+  const date = new Date(value)
+  const now = new Date()
+  const diffMs = now - date
+  const diffMins = Math.floor(diffMs / (1000 * 60))
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+  if (diffMins < 60) {
+    return diffMins <= 1 ? '방금 전' : `${diffMins}분 전`
+  }
+  if (date.toDateString() === now.toDateString()) {
+    const hh = String(date.getHours()).padStart(2, '0')
+    const mm = String(date.getMinutes()).padStart(2, '0')
+    return `${hh}:${mm}`
+  }
+  if (diffDays === 1) {
+    return '어제'
+  }
+  if (diffDays < 7) {
+    return `${diffDays}일 전`
+  }
+  
+  const yy = String(date.getFullYear()).slice(-2)
+  const mm = String(date.getMonth() + 1).padStart(2, '0')
+  const dd = String(date.getDate()).padStart(2, '0')
+  
+  if (date.getFullYear() === now.getFullYear()) {
+    return `${mm}-${dd}`
+  }
+  return `${yy}-${mm}-${dd}`
+}
+
+function formatFullDate(value) {
+  const date = new Date(value)
+  const yyyy = date.getFullYear()
+  const mm = String(date.getMonth() + 1).padStart(2, '0')
+  const dd = String(date.getDate()).padStart(2, '0')
+  const hh = String(date.getHours()).padStart(2, '0')
+  const min = String(date.getMinutes()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd} ${hh}:${min}`
+}
+
+function getCategoryClass(category) {
+  switch (category) {
+    case '관광': return 'cat-tour'
+    case '맛집': return 'cat-food'
+    default: return 'cat-free'
+  }
 }
 
 function refreshBoards() {
@@ -583,47 +626,34 @@ function confirmDelete() {
   overflow: hidden;
 }
 
-/* 
-  📌 공통 Grid 레이아웃 정의 (헤더와 리스트 아이템 동일 비율 맞춤)
-  - 카테고리: 100px 固定
-  - 제목: 가변 (나머지 넓이 차지)
-  - 작성자: 120px 固定
-  - 작성일: 180px 固定
-*/
 .board-table-header,
 .board-list li {
   display: grid;
-  grid-template-columns: 100px 1fr 120px 180px;
+  grid-template-columns: 80px 1fr 110px 100px;
   align-items: center;
   gap: 16px;
 }
 
-/* 테이블 헤더 스타일링 */
 .board-table-header {
   padding: 12px 18px;
   background: var(--accent-bg);
   border-bottom: 1px solid var(--border);
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--sub);
-  letter-spacing: 0.05em;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  opacity: 0.6;
 }
 
-.board-table-header span {
-  display: block;
-}
-
-/* 텍스트 우측/중앙 정렬 밸런스 조정 */
 .col-category {
-  text-align: left;
+  text-align: center;
 }
 .col-title {
   text-align: left;
-  min-width: 0; /* flex/grid 내에서 말줄임(ellipsis) 작동하기 위해 필수 */
+  min-width: 0;
 }
 .col-author {
   text-align: left;
-  padding-left: 4px;
+  padding-left: 8px;
 }
 .col-date {
   text-align: right;
@@ -636,10 +666,10 @@ function confirmDelete() {
 }
 
 .board-list li {
-  padding: 14px 18px;
+  padding: 15px 18px;
   border-bottom: 1px solid var(--border);
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.1s ease;
+  transition: background-color 0.15s ease;
   background: var(--bg);
 }
 
@@ -655,24 +685,57 @@ function confirmDelete() {
 .board-item-title {
   font-size: 0.95rem;
   color: var(--text-h);
-  font-family: var(--heading);
-  font-weight: 600;
+  font-family: var(--sans);
+  font-weight: 500;
   display: block;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+/* 🎨 카테고리 둥근 뱃지 레이아웃 */
 .board-list-category {
-  color: var(--sub);
-  font-weight: 700;
-  font-size: 0.85rem;
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+/* 
+  🎨 리뉴얼된 맑고 화사한 파스텔톤 컬러 팔레트 (칙칙함 완벽 개선)
+  1. 자유 (초록 계열): 싱그럽고 청량한 새싹 민트 그린 
+  2. 맛집 (노랑 계열): 화사하고 상큼한 레몬 허니 옐로우
+  3. 관광 (살구 계열): 노란색과 찰떡 조화를 이루는 달콤한 피치 살구 오렌지
+*/
+.cat-free {
+  background: #e6f4ea; 
+  border: 1px solid #c2e7cc;
+  color: #137333;
+}
+
+.cat-food {
+  background: #fef7e0; 
+  border: 1px solid #feebc8;
+  color: #b06000;
+}
+
+.cat-tour {
+  background: #feefe3;
+  border: 1px solid #fddfc7;
+  color: #c26410;
 }
 
 .board-item-author {
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--text);
+  opacity: 0.8;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -681,9 +744,9 @@ function confirmDelete() {
 
 .board-item-meta {
   color: var(--text);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   white-space: nowrap;
-  opacity: 0.7;
+  opacity: 0.55;
 }
 
 .pagination {
@@ -693,7 +756,6 @@ function confirmDelete() {
   gap: 8px;
   margin-top: 20px;
   padding-top: 14px;
-  border-top: none; /* 컨테이너 테두리 내부 혹은 바깥이므로 기존 선 제거로 공백 정돈 */
   flex-wrap: wrap;
 }
 
@@ -749,6 +811,15 @@ function confirmDelete() {
   gap: 4px;
 }
 
+.detail-title-wrap .board-category {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
 .detail-heading h3 {
   margin: 0;
   font-size: 1.5rem;
@@ -784,7 +855,7 @@ function confirmDelete() {
 }
 
 .detail-date {
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   color: var(--text);
   white-space: nowrap;
 }
@@ -915,22 +986,6 @@ function confirmDelete() {
   text-align: center;
 }
 
-.board-category {
-  display: inline-block;
-  padding: 2px 8px;
-  margin-bottom: 6px;
-  border-radius: 999px;
-  background: var(--sub);
-  color: var(--bg);
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-/* 
-  📱 모바일 반응형 대응 
-  화면 폭이 좁을 때는 딱딱한 테이블 헤더를 숨기고, 
-  기존의 카드/목록형 형태로 전환하여 가독성을 극대화합니다.
-*/
 @media (max-width: 900px) {
   .board-table-header {
     display: none;
@@ -962,7 +1017,7 @@ function confirmDelete() {
 
   .board-item-title {
     font-size: 1rem;
-    white-space: normal; /* 모바일에서는 제목 전체 줄바꿈 허용 */
+    white-space: normal;
   }
 
   .board-content {
