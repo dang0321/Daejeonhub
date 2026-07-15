@@ -13,7 +13,7 @@
         </div>
       </div>
 
-      <!-- 목록 보기 화면일 때만 표시되는 헤더 컨트롤 영역 (검색창 + 카테고리 탭 + 글쓰기 버튼) -->
+      <!-- 목록 보기 화면일 때만 표시되는 헤더 컨트롤 영역 -->
       <div class="board-actions main-actions" v-if="!selectedBoard && !isCreating && !isEditing">
         <div class="search-and-category">
           <!-- 돋보기 아이콘이 들어간 검색 박스 -->
@@ -25,7 +25,7 @@
             <input
               v-model="searchTerm"
               type="search"
-              placeholder="제목 또는 내용을 검색하세요"
+              placeholder="제목, 내용 또는 닉네임을 검색하세요"
               class="search-input"
             />
           </div>
@@ -57,23 +57,37 @@
           등록된 게시글이 없습니다.
         </div>
 
-        <ul v-else class="board-list">
-          <li
-            v-for="board in pagedBoards"
-            :key="board.id"
-            :class="{ active: selectedBoard && selectedBoard.id === board.id }"
-            @click="selectBoard(board.id)"
-          >
-            <div class="board-item-main">
-              <strong>
+        <div v-else class="board-table-container">
+          <!-- 📌 새롭게 추가된 게시판 테이블 헤더 (그리드 정렬 일치) -->
+          <div class="board-table-header">
+            <span class="col-category">카테고리</span>
+            <span class="col-title">제목</span>
+            <span class="col-author">작성자</span>
+            <span class="col-date">작성일</span>
+          </div>
+
+          <ul class="board-list">
+            <li
+              v-for="board in pagedBoards"
+              :key="board.id"
+              :class="{ active: selectedBoard && selectedBoard.id === board.id }"
+              @click="selectBoard(board.id)"
+            >
+              <div class="col-category">
                 <span class="board-list-category">[{{ board.category }}]</span>
-                {{ board.title }}
-              </strong>
-              <p>{{ board.content }}</p>
-            </div>
-            <span class="board-item-meta">{{ formatDate(board.createdAt) }}</span>
-          </li>
-        </ul>
+              </div>
+              <div class="col-title">
+                <strong class="board-item-title">{{ board.title }}</strong>
+              </div>
+              <div class="col-author">
+                <span class="board-item-author">{{ board.nickname }}</span>
+              </div>
+              <div class="col-date">
+                <span class="board-item-meta">{{ formatDate(board.createdAt) }}</span>
+              </div>
+            </li>
+          </ul>
+        </div>
 
         <!-- 페이지네이션 -->
         <div v-if="filteredBoards.length > 0" class="pagination">
@@ -98,7 +112,7 @@
             </button>
           </div>
 
-          <button type="button" class="page-button" :disabled="currentPage === totalPages" @click="currentPage -= 1">
+          <button type="button" class="page-button" :disabled="currentPage === totalPages" @click="currentPage += 1">
             다음
           </button>
 
@@ -121,6 +135,7 @@
               <h3>{{ selectedBoard.title }}</h3>
             </div>
             <div class="detail-date-wrap">
+              <span class="detail-author">{{ selectedBoard.nickname }}</span>
               <span class="detail-date-label">작성일</span>
               <span class="detail-date">{{ formatDate(selectedBoard.createdAt) }}</span>
             </div>
@@ -147,7 +162,7 @@
         </div>
 
         <div class="editor-card">
-          <!-- 사용자가 직접 카테고리를 선택할 수 있도록 disabled를 제거했습니다 -->
+          <!-- 카테고리 선택 -->
           <label class="form-field">
             <span>카테고리</span>
             <select
@@ -162,6 +177,21 @@
                 {{ category }}
               </option>
             </select>
+          </label>
+
+          <!-- 닉네임 입력란 -->
+          <label class="form-field">
+            <span>닉네임</span>
+            <input 
+              v-model="form.nickname" 
+              type="text" 
+              required 
+              maxlength="15" 
+              placeholder="닉네임을 입력해주세요 (공백 제외)"
+              class="form-input" 
+              :disabled="isEditing"
+            />
+            <small class="form-help-text" v-if="isEditing">* 작성자 닉네임은 수정할 수 없습니다.</small>
           </label>
 
           <label class="form-field">
@@ -207,6 +237,7 @@ const isEditing = ref(false)
 
 const form = ref({
   category: '자유',
+  nickname: '',
   title: '',
   content: '',
   password: ''
@@ -224,7 +255,8 @@ const filteredBoards = computed(() => {
       const searchMatched =
         !normalized ||
         item.title.toLowerCase().includes(normalized) ||
-        item.content.toLowerCase().includes(normalized)
+        item.content.toLowerCase().includes(normalized) ||
+        item.nickname.toLowerCase().includes(normalized)
 
       const categoryMatched =
         selectedCategory.value === '전체' ||
@@ -294,12 +326,11 @@ function startCreate() {
   isCreating.value = true
   isEditing.value = false
 
-  // [기능 추가] 글쓰기를 누를 때 현재 필터링 상태('맛집', '관광' 등)를 기본값으로 추천하되, 
-  // 사용자가 변경해서 저장할 수 있도록 유연하게 적용했습니다.
   const targetCategory = selectedCategory.value === '전체' ? '자유' : selectedCategory.value
 
   form.value = {
     category: targetCategory,
+    nickname: '',
     title: '',
     content: '',
     password: ''
@@ -320,9 +351,9 @@ function startEdit() {
   isCreating.value = false
   isEditing.value = true
   
-  // 기존 게시글의 카테고리를 그대로 유지하고, 수정 화면에서도 직접 수정 가능합니다.
   form.value = {
     category: selectedBoard.value.category,
+    nickname: selectedBoard.value.nickname,
     title: selectedBoard.value.title,
     content: selectedBoard.value.content,
     password
@@ -335,6 +366,7 @@ function cancelForm() {
   isEditing.value = false
   form.value = {
     category: '자유',
+    nickname: '',
     title: '',
     content: '',
     password: ''
@@ -342,9 +374,15 @@ function cancelForm() {
 }
 
 function submitForm() {
+  if (!form.value.nickname.trim()) {
+    alert('닉네임을 올바르게 입력해주세요 (공백만 입력 불가).')
+    return
+  }
+
   if (isCreating.value) {
     createBoard({
       category: form.value.category,
+      nickname: form.value.nickname,
       title: form.value.title,
       content: form.value.content,
       password: form.value.password
@@ -434,10 +472,6 @@ function confirmDelete() {
   gap: 12px;
 }
 
-/* 
-  [검색 및 카테고리 탭 정렬] 
-  검색과 탭을 한 곳에 묶고 글쓰기 버튼을 우측 끝으로 밀어냅니다.
-*/
 .main-actions {
   display: flex;
   justify-content: space-between;
@@ -454,7 +488,6 @@ function confirmDelete() {
   flex: 1;
 }
 
-/* 돋보기 아이콘을 품은 Wrapper */
 .search-box {
   position: relative;
   flex: 1;
@@ -463,7 +496,6 @@ function confirmDelete() {
   align-items: center;
 }
 
-/* 돋보기 아이콘 스타일 */
 .search-icon {
   position: absolute;
   left: 12px;
@@ -491,7 +523,6 @@ function confirmDelete() {
   border-color: var(--sub);
 }
 
-/* 카테고리 탭 버튼 스타일 */
 .category-tabs {
   display: flex;
   gap: 6px;
@@ -545,68 +576,114 @@ function confirmDelete() {
   min-height: 420px;
 }
 
+.board-table-container {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+/* 
+  📌 공통 Grid 레이아웃 정의 (헤더와 리스트 아이템 동일 비율 맞춤)
+  - 카테고리: 100px 固定
+  - 제목: 가변 (나머지 넓이 차지)
+  - 작성자: 120px 固定
+  - 작성일: 180px 固定
+*/
+.board-table-header,
+.board-list li {
+  display: grid;
+  grid-template-columns: 100px 1fr 120px 180px;
+  align-items: center;
+  gap: 16px;
+}
+
+/* 테이블 헤더 스타일링 */
+.board-table-header {
+  padding: 12px 18px;
+  background: var(--accent-bg);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--sub);
+  letter-spacing: 0.05em;
+}
+
+.board-table-header span {
+  display: block;
+}
+
+/* 텍스트 우측/중앙 정렬 밸런스 조정 */
+.col-category {
+  text-align: left;
+}
+.col-title {
+  text-align: left;
+  min-width: 0; /* flex/grid 내에서 말줄임(ellipsis) 작동하기 위해 필수 */
+}
+.col-author {
+  text-align: left;
+  padding-left: 4px;
+}
+.col-date {
+  text-align: right;
+}
+
 .board-list {
   list-style: none;
   padding: 0;
   margin: 0;
-  display: grid;
-  gap: 8px;
 }
 
 .board-list li {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px 14px;
+  padding: 14px 18px;
   border-bottom: 1px solid var(--border);
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.2s ease;
-  border-radius: 6px;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  background: var(--bg);
+}
+
+.board-list li:last-child {
+  border-bottom: none;
 }
 
 .board-list li:hover,
 .board-list li.active {
   background: var(--accent-bg);
-  transform: translateX(2px);
 }
 
-.board-item-main {
-  display: grid;
-  gap: 6px;
-  min-width: 0;
-}
-
-.board-item-main strong {
-  font-size: 0.96rem;
+.board-item-title {
+  font-size: 0.95rem;
   color: var(--text-h);
   font-family: var(--heading);
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  font-weight: 600;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .board-list-category {
   color: var(--sub);
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
-.board-item-main p {
-  margin: 0;
-  font-size: 0.9rem;
+.board-item-author {
+  font-size: 0.85rem;
+  font-weight: 600;
   color: var(--text);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
 }
 
 .board-item-meta {
   color: var(--text);
   font-size: 0.8rem;
   white-space: nowrap;
-  margin-top: 2px;
+  opacity: 0.7;
 }
 
 .pagination {
@@ -614,9 +691,9 @@ function confirmDelete() {
   justify-content: center;
   align-items: center;
   gap: 8px;
-  margin-top: 16px;
+  margin-top: 20px;
   padding-top: 14px;
-  border-top: 1px solid var(--border);
+  border-top: none; /* 컨테이너 테두리 내부 혹은 바깥이므로 기존 선 제거로 공백 정돈 */
   flex-wrap: wrap;
 }
 
@@ -685,10 +762,17 @@ function confirmDelete() {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 2px;
+  gap: 4px;
   color: var(--text);
   flex-shrink: 0;
   padding-left: 12px;
+}
+
+.detail-author {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-h);
+  margin-bottom: 2px;
 }
 
 .detail-date-label {
@@ -808,6 +892,18 @@ function confirmDelete() {
   box-sizing: border-box;
 }
 
+.form-input:disabled {
+  opacity: 0.75;
+  background-color: var(--accent-bg);
+  cursor: not-allowed;
+}
+
+.form-help-text {
+  font-size: 0.8rem;
+  color: var(--sub);
+  opacity: 0.8;
+}
+
 .form-textarea {
   min-height: 400px;
   resize: vertical;
@@ -830,7 +926,45 @@ function confirmDelete() {
   font-weight: 600;
 }
 
+/* 
+  📱 모바일 반응형 대응 
+  화면 폭이 좁을 때는 딱딱한 테이블 헤더를 숨기고, 
+  기존의 카드/목록형 형태로 전환하여 가독성을 극대화합니다.
+*/
 @media (max-width: 900px) {
+  .board-table-header {
+    display: none;
+  }
+
+  .board-list li {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 16px;
+  }
+
+  .col-category, 
+  .col-title, 
+  .col-author, 
+  .col-date {
+    text-align: left;
+    width: 100%;
+    padding: 0;
+  }
+
+  .col-date {
+    display: flex;
+    justify-content: flex-start;
+    opacity: 0.6;
+    font-size: 0.8rem;
+  }
+
+  .board-item-title {
+    font-size: 1rem;
+    white-space: normal; /* 모바일에서는 제목 전체 줄바꿈 허용 */
+  }
+
   .board-content {
     flex-direction: column;
     align-items: stretch;

@@ -32,6 +32,7 @@ function formatBoardItem(item) {
   return {
     id: item.id,
     category: isValidCategory ? item.category : '자유',
+    nickname: item.nickname ? item.nickname.trim() : '익명', // 3. 기존 데이터 호환 및 기본값 보정
     title: item.title || '',
     content: item.content || '',
     password: item.password || '',
@@ -48,7 +49,8 @@ export function listBoards(searchTerm = '') {
     ? boards.filter((item) => {
         return (
           item.title.toLowerCase().includes(normalized) ||
-          item.content.toLowerCase().includes(normalized)
+          item.content.toLowerCase().includes(normalized) ||
+          item.nickname.toLowerCase().includes(normalized) // 닉네임 검색도 가능하도록 편의 기능 제공
         )
       })
     : boards
@@ -65,6 +67,7 @@ export function getBoard(id) {
 
 export function createBoard({
   category,
+  nickname, // 2. 닉네임 필드 저장 추가
   title,
   content,
   password
@@ -74,6 +77,7 @@ export function createBoard({
   const newBoard = formatBoardItem({
     id: buildId(),
     category,
+    nickname: nickname.trim(), // 양끝 공백 제거 후 저장
     title: title.trim(),
     content: content.trim(),
     password: password.trim(),
@@ -114,6 +118,7 @@ export function updateBoard(
   board.category = ALLOWED_CATEGORIES.includes(newCategory) ? newCategory : '자유'
   board.title = title.trim()
   board.content = content.trim()
+  // 닉네임은 비회원 사칭 방지를 위해 수정 시 저장 대상에서 제외 (기존 값 자동 유지)
 
   saveBoards(boards)
 
