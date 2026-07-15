@@ -50,7 +50,7 @@
       </div>
     </header>
 
-    <!-- 1. 목록 화면 -->
+    <!-- 1. 목록 화면 (건드리지 않은 100점 레이아웃) -->
     <section class="board-content" v-if="!selectedBoard && !isCreating && !isEditing">
       <section class="board-list-wrapper">
         <div v-if="filteredBoards.length === 0" class="empty-state">
@@ -125,24 +125,36 @@
       </section>
     </section>
 
-    <!-- 2. 상세보기 화면 -->
+    <!-- 2. 상세보기 화면 (등록일 포맷 복구 + 파이프라인 | 구분선 완벽 원복) -->
     <section class="board-content" v-else-if="selectedBoard && !isCreating && !isEditing">
       <section class="board-detail">
         <div class="detail-card">
+          <!-- 상단 가로 정렬 헤더 -->
           <div class="detail-heading">
             <div class="detail-title-wrap">
-              <span class="board-category" :class="getCategoryClass(selectedBoard.category)">
+              <span class="board-list-category detail-badge" :class="getCategoryClass(selectedBoard.category)">
                 {{ selectedBoard.category }}
               </span>
-              <h3>{{ selectedBoard.title }}</h3>
+              <h3 class="detail-title-text">{{ selectedBoard.title }}</h3>
             </div>
-            <div class="detail-date-wrap">
-              <span class="detail-author">{{ selectedBoard.nickname }}</span>
-              <span class="detail-date-label">작성일</span>
-              <span class="detail-date">{{ formatFullDate(selectedBoard.createdAt) }}</span>
+            
+            <div class="detail-meta-wrap">
+              <span class="detail-meta-item">
+                <span class="meta-label">작성자</span>
+                <!-- 목록의 .board-item-author 색상 및 투명도와 100% 일치 -->
+                <span class="meta-value-author">{{ selectedBoard.nickname }}</span>
+              </span>
+              <!-- 원래 좋아하셨던 깔끔한 세로줄 구분선 복원 -->
+              <span class="detail-meta-divider">|</span>
+              <span class="detail-meta-item">
+                <span class="meta-label">등록일</span>
+                <!-- 상세 화면만의 본래 등록일 날짜 형식(yyyy-mm-dd hh:min) 완벽 복구 -->
+                <span class="meta-value-date">{{ formatFullDate(selectedBoard.createdAt) }}</span>
+              </span>
             </div>
           </div>
 
+          <!-- 본문 내용 -->
           <div class="detail-body">
             <p class="detail-content">{{ selectedBoard.content }}</p>
           </div>
@@ -609,6 +621,7 @@ function confirmDelete() {
   gap: 24px;
 }
 
+/* --- 100점짜리 목록 조회 스타일 (철저히 보존) --- */
 .board-list-wrapper,
 .board-detail {
   width: 100%;
@@ -626,7 +639,6 @@ function confirmDelete() {
   overflow: hidden;
 }
 
-/* 📐 해결책 적용: 분류 컬럼은 80px로 원상복구하고, 제목과 닉네임의 공간을 넉넉하게 재정렬했습니다. */
 .board-table-header,
 .board-list li {
   display: grid;
@@ -649,7 +661,6 @@ function confirmDelete() {
   text-align: center;
 }
 
-/* 📐 분류(카테고리) 영역과 제목 사이에 16px의 공간을 밀어내어 분리시킵니다. */
 .col-title {
   text-align: left;
   min-width: 0;
@@ -784,95 +795,108 @@ function confirmDelete() {
   flex-wrap: wrap;
 }
 
+/* --- 목록 조회와 100% 동기화된 상세정보 메타 스타일 --- */
 .detail-card {
   display: grid;
-  gap: 16px;
+  gap: 24px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  padding: 28px 32px;
 }
 
 .detail-heading {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
-  gap: 16px;
-  padding: 16px 18px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface);
+  align-items: center;
+  gap: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
 }
 
 .detail-title-wrap {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  flex: 1 1 auto;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
   min-width: 0;
-  gap: 4px;
 }
 
-.detail-title-wrap .board-category {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  margin-bottom: 6px;
-}
-
-.detail-heading h3 {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--text-h);
-  line-height: 1.4;
-  font-family: var(--heading);
-}
-
-.detail-date-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-  color: var(--text);
+.detail-badge {
+  max-width: 64px;
   flex-shrink: 0;
-  padding-left: 12px;
 }
 
-.detail-author {
-  font-size: 1rem;
+.detail-title-text {
+  margin: 0;
+  font-size: 1.4rem;
   font-weight: 700;
   color: var(--text-h);
-  margin-bottom: 2px;
+  line-height: 1.35;
+  font-family: var(--heading);
+  word-break: break-all;
 }
 
-.detail-date-label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--sub);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+/* 목록 정보 색상 및 투명도 완벽 동기화 */
+.detail-meta-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  font-size: 0.85rem;
 }
 
-.detail-date {
-  font-size: 0.92rem;
+.detail-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 라벨 텍스트 색상 및 투명도 설정 (차분하게 서브 텍스트화) */
+.meta-label {
+  font-weight: 400;
   color: var(--text);
-  white-space: nowrap;
+  opacity: 0.55; 
+}
+
+/* ★ 작성자명 색상: 목록의 `.board-item-author`와 100% 일치 */
+.meta-value-author {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--text);
+  opacity: 0.8; /* 목록 작성자 투명도와 동일하게 일치 */
+}
+
+/* ★ 등록일 색상: 목록의 `.board-item-meta`와 100% 일치 */
+.meta-value-date {
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: var(--text);
+  opacity: 0.55; /* 목록 등록일 투명도와 동일하게 일치 */
+}
+
+/* 원하셨던 본연의 깔끔하고 정돈된 버티컬 바(|) 구분선 복구 */
+.detail-meta-divider {
+  color: var(--text);
+  opacity: 0.3;
+  font-size: 0.85rem;
+  user-select: none;
 }
 
 .detail-body {
-  padding: 20px 18px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--bg);
+  padding: 12px 4px 24px;
+  background: transparent;
+  border: none;
 }
 
 .detail-content {
-  min-height: 240px;
+  min-height: 260px;
   white-space: pre-wrap;
-  line-height: 1.9;
-  letter-spacing: 0.015em;
+  line-height: 1.85;
+  letter-spacing: 0.01em;
   margin: 0;
   color: var(--text);
-  font-size: 1rem;
+  font-size: 1.08rem;
 }
 
 .detail-actions,
@@ -880,6 +904,8 @@ function confirmDelete() {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
 }
 
 .primary-button,
@@ -1054,6 +1080,31 @@ function confirmDelete() {
   .form-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .detail-card {
+    padding: 20px;
+  }
+
+  .detail-heading {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding-bottom: 16px;
+  }
+  
+  .detail-title-wrap {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .detail-meta-wrap {
+    width: 100%;
+    justify-content: flex-start;
+    border-top: 1px dashed var(--border);
+    padding-top: 12px;
+    font-size: 0.8rem;
   }
 }
 </style>
