@@ -44,12 +44,32 @@
             type="button"
             class="page-button"
             :disabled="currentPage === 1"
+            @click="goToPage(1)"
+          >
+            ««
+          </button>
+
+          <button
+            type="button"
+            class="page-button"
+            :disabled="currentPage === 1"
             @click="currentPage -= 1"
           >
             이전
           </button>
 
-          <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
+          <div class="page-number-group">
+            <button
+              v-for="page in pageNumbers"
+              :key="page"
+              type="button"
+              class="page-number"
+              :class="{ active: currentPage === page }"
+              @click="goToPage(page)"
+            >
+              {{ page }}
+            </button>
+          </div>
 
           <button
             type="button"
@@ -58,6 +78,15 @@
             @click="currentPage += 1"
           >
             다음
+          </button>
+
+          <button
+            type="button"
+            class="page-button"
+            :disabled="currentPage === totalPages"
+            @click="goToPage(totalPages)"
+          >
+            »»
           </button>
         </div>
       </section>
@@ -179,6 +208,14 @@ const pagedBoards = computed(() => {
   return filteredBoards.value.slice(start, start + pageSize)
 })
 
+const pageNumbers = computed(() => {
+  const pages = []
+  for (let i = 1; i <= totalPages.value; i += 1) {
+    pages.push(i)
+  }
+  return pages
+})
+
 const selectedBoard = computed(() => {
   return boards.value.find((item) => item.id === selectedId.value) || null
 })
@@ -190,6 +227,11 @@ const modalTitle = computed(() =>
 watch(searchTerm, () => {
   currentPage.value = 1
 })
+
+function goToPage(page) {
+  if (page < 1 || page > totalPages.value) return
+  currentPage.value = page
+}
 
 function formatDate(value) {
   return new Date(value).toLocaleString('ko-KR', {
@@ -434,13 +476,15 @@ function confirmDelete() {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   margin-top: 16px;
   padding-top: 14px;
   border-top: 1px solid #f3f4f6;
+  flex-wrap: wrap;
 }
 
-.page-button {
+.page-button,
+.page-number {
   padding: 8px 12px;
   border: 1px solid #d1d5db;
   border-radius: 8px;
@@ -452,6 +496,18 @@ function confirmDelete() {
 .page-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.page-number.active {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+.page-number-group {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .page-info {
