@@ -11,10 +11,9 @@ const errorMessage = ref('')
 const selectedId = ref(null)
 
 let kakaoMapInstance = null
-let markers = []          // { id, marker, color } 형태로 저장
-let selectedMarker = null // 현재 강조된 마커 참조
+let markers = []
+let selectedMarker = null
 
-// 일반/강조 두 종류의 핀 이미지 생성 (색 + 강조여부)
 const markerImageCache = {}
 const getMarkerImage = (color, active = false) => {
   const key = `${color}-${active}`
@@ -69,37 +68,38 @@ const drawMarkers = (items) => {
     const marker = new kakaoMapInstance.Marker({
       position,
       title: item.title,
-      image: getMarkerImage(color, false)
+      image: getMarkerImage(color, false),
+      clickable: true
     })
     marker.setMap(map.value)
-    // 지도 핀 클릭으로도 강조되게 연결
     kakaoMapInstance.event.addListener(marker, 'click', () => focusPlace(item))
     return { id: item.contentid, marker, color }
   })
 }
 
-// 목록/핀 클릭 → 지도 이동 + 해당 핀 강조
+// 목록/핀 클릭 → 이동 + 강조
 const focusPlace = (place) => {
   if (!map.value || !kakaoMapInstance) return
   const lat = Number(place.mapy)
   const lng = Number(place.mapx)
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return
 
-  // 이전 강조 핀을 원래 색으로 되돌림
+  // 이전 강조 되돌리기
   if (selectedMarker) {
     selectedMarker.marker.setImage(getMarkerImage(selectedMarker.color, false))
     selectedMarker.marker.setZIndex(0)
+    selectedMarker = null
   }
 
   selectedId.value = place.contentid
-  map.value.panTo(new kakaoMapInstance.LatLng(lat, lng))
+  const pos = new kakaoMapInstance.LatLng(lat, lng)
+  map.value.setCenter(pos)
   map.value.setLevel(5)
 
-  // 새로 선택한 핀을 강조 이미지로 교체
   const target = markers.find((m) => m.id === place.contentid)
   if (target) {
     target.marker.setImage(getMarkerImage(target.color, true))
-    target.marker.setZIndex(100)   // 겹칠 때 위로 올림
+    target.marker.setZIndex(100)
     selectedMarker = target
   }
 }
@@ -130,13 +130,13 @@ const loadPlaces = async () => {
   }
 }
 
-// ===== 경로 계산 기능 =====
-const routePoints = ref([])   // 경로에 담은 장소들 (순서 있음)
-// ===== 경로 검색 기능 =====
-const allPlaces = ref([])       // 전체 장소 (검색용)
+// ===== 경로 계산 =====
+const routePoints = ref([])
+let routePolyline = null
+
+const allPlaces = ref([])
 const searchKeyword = ref('')
 
-// 전체 장소 로드 (검색용, 한 번만)
 const loadAllPlaces = async () => {
   try {
     allPlaces.value = await getPlacesByCategory('all')
@@ -145,7 +145,6 @@ const loadAllPlaces = async () => {
   }
 }
 
-// 검색 결과 (이름에 키워드 포함, 최대 8개)
 const searchResults = computed(() => {
   const kw = searchKeyword.value.trim().toLowerCase()
   if (!kw) return []
@@ -153,9 +152,7 @@ const searchResults = computed(() => {
     .filter((p) => p.title && p.title.toLowerCase().includes(kw))
     .slice(0, 8)
 })
-let routePolyline = null      // 지도에 그린 경로 선
 
-// 두 지점 직선거리(km)
 const haversine = (a, b) => {
   const R = 6371, rad = (d) => d * Math.PI / 180
   const dLat = rad(b.lat - a.lat), dLon = rad(b.lng - a.lng)
@@ -164,7 +161,6 @@ const haversine = (a, b) => {
   return 2 * R * Math.asin(Math.sqrt(h))
 }
 
-// 총 거리(km) + 예상 소요시간(분) 계산
 const routeSummary = computed(() => {
   const pts = routePoints.value
   if (pts.length < 2) return { km: 0, minutes: 0 }
@@ -175,29 +171,24 @@ const routeSummary = computed(() => {
       { lat: Number(pts[i + 1].mapy), lng: Number(pts[i + 1].mapx) }
     )
   }
-  km *= 1.3                                   // 직선→도로 보정
-  const minutes = Math.round(km / 40 * 60)    // 자동차 40km/h 기준
+  km *= 1.3
+  const minutes = Math.round(km / 40 * 60)
   return { km: km.toFixed(1), minutes }
 })
 
-// 경로에 장소 추가 (중복 방지)
 const addToRoute = (place) => {
   const pts = routePoints.value
-  // 바로 직전 지점과 같은 장소면 무시 (의미 없는 연속 중복 방지)
   if (pts.length > 0 && pts[pts.length - 1].contentid === place.contentid) return
   routePoints.value.push(place)
   drawRoute()
 }
 
-// 경로에서 장소 제거
-// 경로에서 특정 순번 제거
 const removeFromRoute = (index) => {
   routePoints.value.splice(index, 1)
   routePoints.value = [...routePoints.value]
   drawRoute()
 }
 
-// 순서 이동 (위/아래)
 const moveRoutePoint = (index, dir) => {
   const arr = routePoints.value
   const newIndex = index + dir
@@ -207,13 +198,11 @@ const moveRoutePoint = (index, dir) => {
   drawRoute()
 }
 
-// 경로 전체 초기화
 const clearRoute = () => {
   routePoints.value = []
   drawRoute()
 }
 
-// 지도에 경로 선(폴리라인) 그리기
 const drawRoute = () => {
   if (!map.value || !kakaoMapInstance) return
   if (routePolyline) { routePolyline.setMap(null); routePolyline = null }
@@ -244,7 +233,7 @@ onMounted(async () => {
     })
     map.value.setZoomable(false)
     await loadPlaces()
-    await loadAllPlaces()      // 검색용 전체 장소 로드
+    await loadAllPlaces()
   } catch (error) {
     errorMessage.value = error.message || '지도를 초기화하지 못했습니다.'
     loading.value = false
@@ -335,7 +324,7 @@ onBeforeUnmount(clearMarkers)
           <span class="route-role">
             {{ i === 0 ? '출발' : i === routePoints.length - 1 ? '도착' : '경유' }}
           </span>
-          <span class="route-name">{{ p.title }}</span>
+          <span class="route-name" @click="focusPlace(p)">{{ p.title }}</span>
           <span class="route-actions">
             <button @click="moveRoutePoint(i, -1)" :disabled="i === 0">▲</button>
             <button @click="moveRoutePoint(i, 1)" :disabled="i === routePoints.length - 1">▼</button>
@@ -358,176 +347,55 @@ onBeforeUnmount(clearMarkers)
 </template>
 
 <style scoped>
-.map-page {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.map-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-}
-
-.map-toolbar h2 {
-  margin: 0;
-  font-size: 24px;
-  color: var(--sub);
-}
-
-.map-toolbar p {
-  margin: 4px 0 0;
-  color: #587058;
-}
-
-.filter-group {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
+.map-page { display: flex; flex-direction: column; gap: 16px; }
+.map-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.map-toolbar h2 { margin: 0; font-size: 24px; color: var(--sub); }
+.map-toolbar p { margin: 4px 0 0; color: #587058; }
+.filter-group { display: flex; gap: 8px; flex-wrap: wrap; }
 .filter-group button {
-  border: 1px solid var(--border);
-  background: white;
-  color: var(--sub);
-  border-radius: 999px;
-  padding: 8px 12px;
-  cursor: pointer;
+  border: 1px solid var(--border); background: white; color: var(--sub);
+  border-radius: 999px; padding: 8px 12px; cursor: pointer;
 }
-
-.filter-group button.active {
-  background: var(--sub);
-  color: white;
-  border-color: var(--sub);
-}
-
-.legend {
-  display: flex;
-  gap: 14px;
-  flex-wrap: wrap;
-  font-size: 13px;
-  color: #516952;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.legend-item i {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  display: inline-block;
-}
-
-.map-card {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 16px;
-}
-
-.map-area {
-  position: relative;
-}
-
+.filter-group button.active { background: var(--sub); color: white; border-color: var(--sub); }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: #516952; }
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.legend-item i { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+.map-card { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+.map-area { position: relative; }
 .zoom-controls {
-  position: absolute;
-  top: 12px; right: 12px;
-  display: flex; flex-direction: column; gap: 4px;
-  z-index: 10;
+  position: absolute; top: 12px; right: 12px;
+  display: flex; flex-direction: column; gap: 4px; z-index: 10;
 }
 .zoom-controls button {
-  width: 36px; height: 36px;
-  border: 1px solid #d1d5db; background: #fff;
-  border-radius: 8px; cursor: pointer;
-  font-size: 18px; font-weight: 600;
+  width: 36px; height: 36px; border: 1px solid #d1d5db; background: #fff;
+  border-radius: 8px; cursor: pointer; font-size: 18px; font-weight: 600;
   box-shadow: 0 1px 4px rgba(0,0,0,0.15);
 }
 .zoom-controls button:hover { background: #f3f4f6; }
-
 .map-container {
-  width: 100%;
-  min-height: 480px;
-  border-radius: 16px;
-  overflow: hidden;
-  border: 1px solid var(--border);
+  width: 100%; min-height: 480px; border-radius: 16px;
+  overflow: hidden; border: 1px solid var(--border);
 }
-
 .map-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(248, 250, 246, 0.9);
-  border-radius: 16px;
-  color: #374f37;
-  font-size: 15px;
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(248, 250, 246, 0.9); border-radius: 16px; color: #374f37; font-size: 15px;
 }
-
-.map-overlay.error {
-  background: rgba(255, 202, 40, 0.16);
-  color: #7a5f00;
-}
-
+.map-overlay.error { background: rgba(255, 202, 40, 0.16); color: #7a5f00; }
 .place-list {
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 16px;
-  max-height: 480px;
-  overflow-y: auto;
-  box-shadow: var(--shadow);
+  background: white; border: 1px solid var(--border); border-radius: 16px;
+  padding: 16px; max-height: 480px; overflow-y: auto; box-shadow: var(--shadow);
 }
-
-.place-list h3 {
-  margin-top: 0;
-  margin-bottom: 12px;
-  color: var(--sub);
-}
-
-.place-list ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
+.place-list h3 { margin-top: 0; margin-bottom: 12px; color: var(--sub); }
+.place-list ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
 .place-list li {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 8px;
-  border-radius: 8px;
-  border-bottom: 1px solid #eef5eb;
-  cursor: pointer;
-  transition: background 0.15s;
+  display: flex; flex-direction: column; gap: 4px; padding: 8px;
+  border-radius: 8px; border-bottom: 1px solid #eef5eb; cursor: pointer; transition: background 0.15s;
 }
+.place-list li:hover { background: #f3f9f0; }
+.place-list li.selected { background: rgba(255, 202, 40, 0.2); border-left: 3px solid var(--point); }
+.place-list strong { font-size: 15px; color: var(--sub); }
+.place-list span { color: #6a7d68; font-size: 13px; }
 
-.place-list li:hover {
-  background: #f3f9f0;
-}
-
-.place-list li.selected {
-  background: rgba(255, 202, 40, 0.2);
-  border-left: 3px solid var(--point);
-}
-
-.place-list strong {
-  font-size: 15px;
-  color: var(--sub);
-}
-
-.place-list span {
-  color: #6a7d68;
-  font-size: 13px;
-}
 .route-add-btn {
   margin-top: 6px; align-self: flex-start;
   border: 1px solid #2563eb; background: #fff; color: #2563eb;
@@ -535,9 +403,7 @@ onBeforeUnmount(clearMarkers)
 }
 .route-add-btn:hover { background: #2563eb; color: #fff; }
 
-.route-panel {
-  background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 16px;
-}
+.route-panel { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 16px; }
 .route-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .route-header h3 { margin: 0; font-size: 17px; color: var(--sub); }
 .route-clear {
@@ -550,7 +416,8 @@ onBeforeUnmount(clearMarkers)
   font-size: 12px; font-weight: 600; color: #fff; background: #64748b;
   border-radius: 999px; padding: 2px 8px; min-width: 34px; text-align: center;
 }
-.route-name { flex: 1; font-size: 14px; }
+.route-name { flex: 1; font-size: 14px; cursor: pointer; }
+.route-name:hover { color: #2563eb; text-decoration: underline; }
 .route-actions { display: flex; gap: 4px; }
 .route-actions button {
   width: 26px; height: 26px; border: 1px solid #d1d5db; background: #fff;
@@ -564,8 +431,7 @@ onBeforeUnmount(clearMarkers)
 .route-search { margin-bottom: 12px; }
 .route-search input {
   width: 100%; box-sizing: border-box;
-  border: 1px solid #d1d5db; border-radius: 8px;
-  padding: 8px 12px; font-size: 14px;
+  border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 12px; font-size: 14px;
 }
 .search-results {
   list-style: none; padding: 0; margin: 8px 0 0;
@@ -580,10 +446,8 @@ onBeforeUnmount(clearMarkers)
 .sr-cat { color: #94a3b8; font-size: 12px; }
 .sr-add {
   width: 28px; height: 28px; border: 1px solid #2563eb;
-  background: #fff; color: #2563eb; border-radius: 6px;
-  cursor: pointer; font-size: 15px;
+  background: #fff; color: #2563eb; border-radius: 6px; cursor: pointer; font-size: 15px;
 }
 .sr-add:hover { background: #2563eb; color: #fff; }
 .sr-empty { margin: 8px 0 0; font-size: 13px; color: #94a3b8; }
-
 </style>
