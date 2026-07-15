@@ -2,7 +2,7 @@
   <div class="board-page">
     <header class="board-header">
       <h1>게시판</h1>
-      <div class="board-actions">
+      <div class="board-actions" v-if="!selectedBoard">
         <input
           v-model="searchTerm"
           type="search"
@@ -93,11 +93,13 @@
 
         <div class="detail-card">
           <div class="detail-heading">
-            <div>
-              <p class="detail-label">게시글 상세</p>
+            <div class="detail-title-wrap">
               <h3>{{ selectedBoard.title }}</h3>
             </div>
-            <span class="detail-date">{{ formatDate(selectedBoard.createdAt) }}</span>
+            <div class="detail-date-wrap">
+              <span class="detail-date-label">작성일</span>
+              <span class="detail-date">{{ formatDate(selectedBoard.createdAt) }}</span>
+            </div>
           </div>
 
           <div class="detail-body">
@@ -500,43 +502,64 @@ function confirmDelete() {
 .detail-heading {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #f3f4f6;
+  align-items: flex-end;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #e5e7eb;
 }
 
-.detail-label {
-  margin: 0 0 6px;
-  font-size: 0.76rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: #4b5563;
-  text-transform: uppercase;
+.detail-title-wrap {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: flex-end;
+  min-width: 0;
 }
 
 .detail-heading h3 {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1.5rem;
+  font-weight: 700;
   color: #111827;
+  line-height: 1.4;
+}
+
+.detail-date-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  color: #6b7280;
+  flex-shrink: 0;
+  padding-left: 12px;
+}
+
+.detail-date-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #9ca3af;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .detail-date {
-  color: #6b7280;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
+  color: #4b5563;
   white-space: nowrap;
 }
 
 .detail-body {
   border-top: 1px solid #f3f4f6;
-  padding-top: 14px;
+  padding-top: 16px;
 }
 
 .detail-content {
+  min-height: 240px;
   white-space: pre-wrap;
-  line-height: 1.7;
+  line-height: 1.9;
+  letter-spacing: 0.015em;
   margin: 0;
   color: #374151;
+  font-size: 1rem;
 }
 
 .detail-actions,
