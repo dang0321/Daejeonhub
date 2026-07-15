@@ -27,16 +27,17 @@ function buildId() {
 }
 
 function formatBoardItem(item) {
-  // 기존 데이터 중 카테고리가 없거나 허용되지 않은 카테고리인 경우 '자유'로 보정합니다.
   const isValidCategory = ALLOWED_CATEGORIES.includes(item.category)
   return {
     id: item.id,
     category: isValidCategory ? item.category : '자유',
-    nickname: item.nickname ? item.nickname.trim() : '익명', // 3. 기존 데이터 호환 및 기본값 보정
+    nickname: item.nickname ? item.nickname.trim() : '익명',
     title: item.title || '',
     content: item.content || '',
     password: item.password || '',
-    createdAt: item.createdAt || new Date().toISOString()
+    createdAt: item.createdAt || new Date().toISOString(),
+    likes: Number(item.likes) || 0,
+    views: Number(item.views) || 0 // 👈 [추가] 조회수 기본값 세팅
   }
 }
 
@@ -50,7 +51,7 @@ export function listBoards(searchTerm = '') {
         return (
           item.title.toLowerCase().includes(normalized) ||
           item.content.toLowerCase().includes(normalized) ||
-          item.nickname.toLowerCase().includes(normalized) // 닉네임 검색도 가능하도록 편의 기능 제공
+          item.nickname.toLowerCase().includes(normalized)
         )
       })
     : boards
@@ -67,7 +68,7 @@ export function getBoard(id) {
 
 export function createBoard({
   category,
-  nickname, // 2. 닉네임 필드 저장 추가
+  nickname,
   title,
   content,
   password
@@ -77,11 +78,13 @@ export function createBoard({
   const newBoard = formatBoardItem({
     id: buildId(),
     category,
-    nickname: nickname.trim(), // 양끝 공백 제거 후 저장
+    nickname: nickname.trim(),
     title: title.trim(),
     content: content.trim(),
     password: password.trim(),
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    likes: 0,
+    views: 0 // 👈 [추가] 신규 생성 시 조회수 0으로 설정
   })
 
   boards.push(newBoard)
@@ -113,12 +116,10 @@ export function updateBoard(
     return null
   }
 
-  // 수정 시 지정된 카테고리가 유효하지 않으면 기존 카테고리 유지 혹은 '자유' 처리
   const newCategory = category || board.category || '자유'
   board.category = ALLOWED_CATEGORIES.includes(newCategory) ? newCategory : '자유'
   board.title = title.trim()
   board.content = content.trim()
-  // 닉네임은 비회원 사칭 방지를 위해 수정 시 저장 대상에서 제외 (기존 값 자동 유지)
 
   saveBoards(boards)
 
@@ -145,4 +146,42 @@ export function deleteBoard(id, password) {
   saveBoards(boards)
 
   return true
+}
+
+// 👈 [추가] 조회수 증가 처리 로직
+export function incrementViews(id) {
+  const boards = loadBoards()
+  const index = boards.findIndex((item) => item.id === id)
+
+  if (index === -1) return null
+
+  const board = boards[index]
+  board.views = (Number(board.views) || 0) + 1
+
+  saveBoards(boards)
+  return board
+}
+
+export function toggleLike(id, isAdding) {
+  const boards = loadBoards()
+  const index = boards.findIndex((item) => item.id === id)
+
+  if (index === -1) {
+    return null
+  }
+
+  const board = boards[index]
+  
+  if (typeof board.likes !== 'number') {
+    board.likes = 0
+  }
+
+  if (isAdding) {
+    board.likes += 1
+  } else {
+    board.likes = Math.max(0, board.likes - 1)
+  }
+
+  saveBoards(boards)
+  return board
 }

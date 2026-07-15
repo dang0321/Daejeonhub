@@ -1,6 +1,6 @@
 <template>
   <div class="board-page">
-    <!-- [기존 유지] 상단 '게시판' 헤더 영역 -->
+    <!-- 상단 '게시판' 헤더 영역 -->
     <header class="board-header">
       <div class="header-top">
         <h1>게시판</h1>
@@ -9,7 +9,7 @@
         </div>
       </div>
 
-      <!-- [기존 유지] 목록 보기 화면의 헤더 컨트롤 -->
+      <!-- 목록 보기 화면의 헤더 컨트롤 -->
       <div class="board-actions main-actions" v-if="!selectedBoard && !isCreating && !isEditing">
         <div class="search-and-category">
           <div class="search-box">
@@ -43,7 +43,7 @@
       </div>
     </header>
 
-    <!-- [기존 유지] 1. 목록 화면 -->
+    <!-- 1. 목록 화면 -->
     <section class="board-content" v-if="!selectedBoard && !isCreating && !isEditing">
       <section class="board-list-wrapper">
         <div v-if="filteredBoards.length === 0" class="empty-state">
@@ -51,11 +51,14 @@
         </div>
 
         <div v-else class="board-table-container">
+          <!-- [순서 조정] 분류 - 제목 - 작성자 - 등록일 - 좋아요 - 조회수 -->
           <div class="board-table-header">
             <span class="col-category">분류</span>
             <span class="col-title">제목</span>
             <span class="col-author">작성자</span>
             <span class="col-date">등록일</span>
+            <span class="col-stats-like">좋아요</span>
+            <span class="col-stats-view">조회수</span>
           </div>
 
           <ul class="board-list">
@@ -78,6 +81,16 @@
               </div>
               <div class="col-date">
                 <span class="board-item-meta">{{ formatDate(board.createdAt) }}</span>
+              </div>
+              <div class="col-stats-like">
+                <span class="stat-number" :class="{ 'has-likes': board.likes > 0 }">
+                  {{ board.likes || 0 }}
+                </span>
+              </div>
+              <div class="col-stats-view">
+                <span class="stat-number view-number">
+                  {{ board.views || 0 }}
+                </span>
               </div>
             </li>
           </ul>
@@ -113,7 +126,7 @@
       </section>
     </section>
 
-    <!-- [기존 유지] 2. 상세보기 화면 (이 레이아웃을 아래 글쓰기 폼이 완벽하게 복사합니다) -->
+    <!-- 2. 상세보기 화면 -->
     <section class="board-content" v-else-if="selectedBoard && !isCreating && !isEditing">
       <section class="board-detail">
         <div class="detail-card">
@@ -132,6 +145,11 @@
               </span>
               <span class="detail-meta-divider">|</span>
               <span class="detail-meta-item">
+                <span class="meta-label">조회수</span>
+                <span class="meta-value-author">{{ selectedBoard.views || 0 }}</span>
+              </span>
+              <span class="detail-meta-divider">|</span>
+              <span class="detail-meta-item">
                 <span class="meta-label">등록일</span>
                 <span class="meta-value-date">{{ formatFullDate(selectedBoard.createdAt) }}</span>
               </span>
@@ -142,22 +160,34 @@
             <p class="detail-content">{{ selectedBoard.content }}</p>
           </div>
 
+          <!-- 하단 액션바 -->
           <div class="detail-actions">
-            <button class="secondary-button" type="button" @click="startEdit">수정</button>
-            <button class="danger-button" type="button" @click="confirmDelete">삭제</button>
+            <button 
+              type="button" 
+              class="like-button" 
+              :class="{ liked: isCurrentPostLiked }" 
+              @click="handleLikeToggle"
+            >
+              <span class="like-label">좋아요</span>
+              <span class="like-count">{{ selectedBoard.likes || 0 }}</span>
+            </button>
+
+            <div class="right-actions">
+              <button class="secondary-button" type="button" @click="startEdit">수정</button>
+              <button class="danger-button" type="button" @click="confirmDelete">삭제</button>
+            </div>
           </div>
         </div>
       </section>
     </section>
 
-    <!-- 3. [똑같이!!!] 상세조회 디자인과 100% 동일하게 일치시킨 글쓰기/수정 화면 -->
+    <!-- 3. 상세조회 디자인과 100% 동일하게 일치시킨 글쓰기/수정 화면 -->
     <section class="board-content" v-else>
       <form class="board-detail" @submit.prevent="submitForm">
         <div class="detail-card">
           <div class="detail-heading">
-            <!-- 1) 배너 및 제목부: 상세조회와 동일한 마크업 및 css 적용 -->
+            <!-- 1) 배너 및 제목부 -->
             <div class="detail-title-wrap">
-              <!-- 상세조회 배너 클래스 'board-list-category detail-badge' 적용 및 셀렉터 내장 -->
               <span class="board-list-category detail-badge editor-category-badge" :class="getCategoryClass(form.category)">
                 {{ form.category }}
                 <select v-model="form.category" class="editor-select-overlay">
@@ -170,7 +200,6 @@
                   </option>
                 </select>
               </span>
-              <!-- 밑줄 및 테두리를 완벽하게 제거하여 상세 텍스트와 완벽 일치 -->
               <input 
                 v-model="form.title" 
                 type="text" 
@@ -181,7 +210,7 @@
               />
             </div>
             
-            <!-- 2) 작성자 및 비밀번호부: 상세조회의 'detail-meta-wrap' 클래스 및 메타구조 그대로 차용 -->
+            <!-- 2) 작성자 및 비밀번호부 -->
             <div class="detail-meta-wrap">
               <span class="detail-meta-item">
                 <span class="meta-label">작성자</span>
@@ -234,12 +263,14 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import {
   listBoards,
   createBoard,
   updateBoard,
-  deleteBoard
+  deleteBoard,
+  toggleLike,
+  incrementViews
 } from '../services/boardService'
 
 const searchTerm = ref('')
@@ -260,6 +291,34 @@ const form = ref({
 const boards = ref(listBoards())
 const pageSize = 5
 const currentPage = ref(1)
+
+const userLikedPostIds = ref([])
+const viewedPostIds = ref([])
+
+onMounted(() => {
+  const savedLikes = localStorage.getItem('user-liked-posts')
+  if (savedLikes) {
+    try {
+      userLikedPostIds.value = JSON.parse(savedLikes)
+    } catch (e) {
+      userLikedPostIds.value = []
+    }
+  }
+
+  const savedViews = sessionStorage.getItem('user-viewed-posts')
+  if (savedViews) {
+    try {
+      viewedPostIds.value = JSON.parse(savedViews)
+    } catch (e) {
+      viewedPostIds.value = []
+    }
+  }
+})
+
+const isCurrentPostLiked = computed(() => {
+  if (!selectedId.value) return false
+  return userLikedPostIds.value.includes(selectedId.value)
+})
 
 const filteredBoards = computed(() => {
   const normalized = searchTerm.value.trim().toLowerCase()
@@ -368,6 +427,13 @@ function selectBoard(id) {
   selectedId.value = id
   isCreating.value = false
   isEditing.value = false
+
+  if (!viewedPostIds.value.includes(id)) {
+    incrementViews(id)
+    viewedPostIds.value.push(id)
+    sessionStorage.setItem('user-viewed-posts', JSON.stringify(viewedPostIds.value))
+    refreshBoards()
+  }
 }
 
 function clearSelection() {
@@ -481,6 +547,24 @@ function confirmDelete() {
   selectedId.value = null
   isCreating.value = false
   isEditing.value = false
+  refreshBoards()
+}
+
+function handleLikeToggle() {
+  if (!selectedId.value) return
+
+  const id = selectedId.value
+  const hasLiked = isCurrentPostLiked.value
+
+  if (hasLiked) {
+    userLikedPostIds.value = userLikedPostIds.value.filter(likedId => likedId !== id)
+    toggleLike(id, false)
+  } else {
+    userLikedPostIds.value.push(id)
+    toggleLike(id, true)
+  }
+
+  localStorage.setItem('user-liked-posts', JSON.stringify(userLikedPostIds.value))
   refreshBoards()
 }
 </script>
@@ -639,12 +723,16 @@ function confirmDelete() {
   overflow: hidden;
 }
 
+/* 
+  [요청 레이아웃 순서 및 컬럼 비율]
+  분류(80px) 제목(1fr) 작성자(110px) 등록일(100px) 좋아요(80px) 조회수(80px)
+*/
 .board-table-header,
 .board-list li {
   display: grid;
-  grid-template-columns: 80px 1fr 120px 100px;
+  grid-template-columns: 80px 1fr 110px 100px 80px 80px;
   align-items: center;
-  gap: 24px;
+  gap: 16px;
 }
 
 .board-table-header {
@@ -664,15 +752,21 @@ function confirmDelete() {
 .col-title {
   text-align: left;
   min-width: 0;
-  padding-left: 16px; 
+  padding-left: 8px; 
 }
 
 .col-author {
   text-align: left;
-  padding-left: 16px;
+  padding-left: 4px;
 }
+
 .col-date {
-  text-align: right;
+  text-align: center;
+}
+
+.col-stats-like,
+.col-stats-view {
+  text-align: center;
 }
 
 .board-list {
@@ -709,6 +803,22 @@ function confirmDelete() {
   text-overflow: ellipsis;
 }
 
+.stat-number {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text);
+  opacity: 0.8;
+}
+
+.stat-number.has-likes {
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.stat-number.view-number {
+  opacity: 0.55;
+}
+
 .board-list-category {
   display: inline-block;
   padding: 3px 8px;
@@ -742,9 +852,9 @@ function confirmDelete() {
 
 .board-item-author {
   font-size: 0.85rem;
-  font-weight: 400;
-  color: var(--text);
-  opacity: 0.8;
+  font-weight: 500;
+  color: var(--text-h);
+  opacity: 0.9;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -896,10 +1006,53 @@ function confirmDelete() {
 
 .detail-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   gap: 10px;
   padding-top: 12px;
   border-top: 1px dashed var(--border);
+}
+
+.right-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.like-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--sans);
+  user-select: none;
+}
+
+.like-button:hover {
+  background: var(--accent-bg);
+  border-color: var(--sub);
+}
+
+.like-button.liked {
+  border-color: var(--sub);
+  background: var(--accent-bg);
+}
+
+.like-label {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text);
+  opacity: 0.7;
+}
+
+.like-count {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-h);
 }
 
 .primary-button,
@@ -930,11 +1083,7 @@ function confirmDelete() {
   border-color: var(--point);
 }
 
-/* ==========================================
-   🖋️ [신규 일치화] 글쓰기 전용 레이아웃 커스텀 스타일
-   ========================================== */
-
-/* 1. 배너/카테고리 뱃지 스타일 동기화 (span 안에 select를 투명하게 배치) */
+/* --- 글쓰기/수정용 커스텀 디자인 --- */
 .editor-category-badge {
   position: relative;
   overflow: hidden;
@@ -947,11 +1096,10 @@ function confirmDelete() {
   left: 0;
   width: 100%;
   height: 100%;
-  opacity: 0; /* 완전 투명하게 만들어서 배경 뱃지 스타일이 그대로 비치게 함 */
+  opacity: 0; 
   cursor: pointer;
 }
 
-/* 2. 제목 아래 테두리 완전히 제거 (상세페이지와 동일하게 텍스트만 표시) */
 .editor-title-input {
   flex: 1;
   border: none;
@@ -969,7 +1117,6 @@ function confirmDelete() {
   opacity: 0.25;
 }
 
-/* 3. 작성자 및 패스워드 입력 필드 (상세조회 스타일 박살내지 않도록 테두리 제거 및 일치) */
 .editor-meta-input {
   border: none;
   border-bottom: 1px solid transparent;
@@ -983,7 +1130,7 @@ function confirmDelete() {
 }
 
 .editor-meta-input:focus {
-  border-bottom-color: var(--sub); /* 포커스 시에만 하단 실선 표시 */
+  border-bottom-color: var(--sub); 
 }
 
 .editor-meta-input::placeholder {
@@ -996,7 +1143,6 @@ function confirmDelete() {
   cursor: not-allowed;
 }
 
-/* 본문 영역 */
 .editor-textarea {
   width: 100%;
   min-height: 260px;
@@ -1044,10 +1190,24 @@ function confirmDelete() {
   .col-category, 
   .col-title, 
   .col-author, 
+  .col-stats-like,
+  .col-stats-view,
   .col-date {
     text-align: left;
     width: 100%;
     padding: 0;
+  }
+
+  .col-stats-like::before {
+    content: "좋아요 ";
+    font-size: 0.8rem;
+    opacity: 0.6;
+  }
+  
+  .col-stats-view::before {
+    content: "조회수 ";
+    font-size: 0.8rem;
+    opacity: 0.6;
   }
 
   .col-date {
@@ -1124,6 +1284,14 @@ function confirmDelete() {
     border-top: 1px dashed var(--border);
     padding-top: 12px;
     font-size: 0.8rem;
+    flex-wrap: wrap; 
+    gap: 8px 12px;
+  }
+
+  .detail-actions {
+    flex-direction: row; 
+    justify-content: space-between;
+    width: 100%;
   }
 }
 </style>
