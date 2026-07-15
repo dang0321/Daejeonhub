@@ -15,11 +15,6 @@
 
     <section class="board-content">
       <section class="board-list-wrapper" v-if="!selectedBoard">
-        <div class="panel-header">
-          <h2>게시글 목록</h2>
-          <p class="panel-subtitle">게시글을 선택하면 상세 내용을 확인할 수 있어요.</p>
-        </div>
-
         <div v-if="filteredBoards.length === 0" class="empty-state">
           등록된 게시글이 없습니다.
         </div>
@@ -397,19 +392,6 @@ function confirmDelete() {
   min-height: 420px;
 }
 
-.panel-header {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 14px;
-}
-
-.panel-subtitle {
-  margin: 0;
-  color: #6b7280;
-  font-size: 0.92rem;
-}
-
 .board-list {
   list-style: none;
   padding: 0;
@@ -423,18 +405,21 @@ function confirmDelete() {
   justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid #f3f4f6;
+  padding: 12px 14px;
+  border-bottom: 1px solid #cbd5e1;
   cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  border-radius: 6px;
 }
 
 .board-list li:last-child {
-  border-bottom: none;
+  border-bottom: 1px solid #cbd5e1;
 }
 
 .board-list li:hover,
 .board-list li.active {
-  background: #f9fafb;
+  background: #eef2ff;
+  transform: translateX(2px);
 }
 
 .board-item-main {
