@@ -102,7 +102,7 @@ const goBack = () => {
 }
 
 .region-card {
-  background: #fffdf8;
+  background: #eef7e8;
   border-radius: 28px;
   padding: 32px;
   box-shadow: 0 20px 44px rgba(45, 92, 47, 0.12);
@@ -111,7 +111,7 @@ const goBack = () => {
 }
 
 .photo-frame {
-  background: linear-gradient(145deg, #fbfff8, #eef7e8);
+  background: #ffffff;
   border: 1px solid rgba(111, 169, 104, 0.22);
   border-radius: 24px;
   padding: 20px;
@@ -123,7 +123,6 @@ const goBack = () => {
   background: #ffffff;
   border-radius: 20px;
   padding: 24px 24px 28px;
-  box-shadow: 0 10px 24px rgba(57, 108, 64, 0.08);
   text-align: center;
 }
 
@@ -155,14 +154,13 @@ h2 {
   line-height: 1.7;
   color: #617d64;
   margin: 0 auto;
-  max-width: 560px;
+  max-width: 640px;
 }
 
 .detail-box {
   background: #f9fdf8;
   border-radius: 20px;
   padding: 22px 24px;
-  border: 1px solid rgba(111, 169, 104, 0.16);
 }
 
 .detail-box h3 {

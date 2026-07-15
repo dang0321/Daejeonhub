@@ -185,7 +185,7 @@ const goToService = (routeName) => {
 
 .hero-content h1 {
   font-size: clamp(2.6rem, 4.9vw, 3.9rem);
-  margin-bottom: 20px;
+  margin-bottom: 28px;
   font-weight: 800;
   color: #194324;
   letter-spacing: -0.02em;
