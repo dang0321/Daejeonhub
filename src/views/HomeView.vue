@@ -4,11 +4,11 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 
 const regions = [
-  { name: '동구', slug: 'donggu', description: '대전 동부의 문화와 생활공간' },
-  { name: '중구', slug: 'junggu', description: '대전 중심부의 역사와 상권' },
-  { name: '서구', slug: 'seogu', description: '대전 서부의 주거와 산업의 중심' },
-  { name: '유성구', slug: 'yuseonggu', description: '대전 북서부 · 관광지 밀집' },
-  { name: '대덕구', slug: 'daeduckgu', description: '대전 북부의 과학·산업 도시' }
+  { name: '동구', slug: 'donggu', description: '대전 동부의 문화와 생활공간', icon: '/src/assets/icons/symbol_east.png' },
+  { name: '중구', slug: 'junggu', description: '대전 중심부의 역사와 상권', icon: '/src/assets/icons/symbol_middle2.png' },
+  { name: '서구', slug: 'seogu', description: '대전 서부의 주거와 산업의 중심', icon: '/src/assets/icons/symbol_west2.png' },
+  { name: '유성구', slug: 'yuseonggu', description: '대전 북서부 · 관광지 밀집', icon: '/src/assets/icons/symbol_u.png' },
+  { name: '대덕구', slug: 'daeduckgu', description: '대전 북부의 과학·산업 도시', icon: '/src/assets/icons/symbol_dae2.png' }
 ]
 
 const services = [
@@ -63,7 +63,7 @@ const goToService = (routeName) => {
             class="region-card"
             @click="goToRegion(region.slug)"
           >
-            <div class="region-icon">🏘️</div>
+            <img v-if="region.icon" :src="region.icon" alt="" class="region-icon" />
             <h3>{{ region.name }}</h3>
             <p>{{ region.description }}</p>
           </button>
@@ -259,8 +259,13 @@ const goToService = (routeName) => {
 }
 
 .region-icon {
-  font-size: 42px;
+  width: 45px;
+  height: 45px;
+  object-fit: contain;
   margin-bottom: 14px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .region-card h3 {
