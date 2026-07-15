@@ -98,7 +98,7 @@
             </button>
           </div>
 
-          <button type="button" class="page-button" :disabled="currentPage === totalPages" @click="currentPage += 1">
+          <button type="button" class="page-button" :disabled="currentPage === totalPages" @click="currentPage -= 1">
             다음
           </button>
 
@@ -147,13 +147,12 @@
         </div>
 
         <div class="editor-card">
-          <!-- 카테고리는 사용자가 보고 있던 카테고리 기준으로 자동 선택 및 유지됩니다 -->
+          <!-- 사용자가 직접 카테고리를 선택할 수 있도록 disabled를 제거했습니다 -->
           <label class="form-field">
             <span>카테고리</span>
             <select
               v-model="form.category"
               class="form-input"
-              disabled
             >
               <option
                 v-for="category in categories.filter(c => c !== '전체')"
@@ -163,7 +162,6 @@
                 {{ category }}
               </option>
             </select>
-            <small class="form-help-text">* 카테고리는 목록 탭 선택 상태에 따라 자동 지정됩니다.</small>
           </label>
 
           <label class="form-field">
@@ -296,7 +294,8 @@ function startCreate() {
   isCreating.value = true
   isEditing.value = false
 
-  // [중요] 글쓰기를 누를 때 현재 필터링된 카테고리를 할당합니다. '전체'일 경우 기본값은 '자유'입니다.
+  // [기능 추가] 글쓰기를 누를 때 현재 필터링 상태('맛집', '관광' 등)를 기본값으로 추천하되, 
+  // 사용자가 변경해서 저장할 수 있도록 유연하게 적용했습니다.
   const targetCategory = selectedCategory.value === '전체' ? '자유' : selectedCategory.value
 
   form.value = {
@@ -321,7 +320,7 @@ function startEdit() {
   isCreating.value = false
   isEditing.value = true
   
-  // 기존 게시글의 카테고리를 그대로 유지합니다.
+  // 기존 게시글의 카테고리를 그대로 유지하고, 수정 화면에서도 직접 수정 가능합니다.
   form.value = {
     category: selectedBoard.value.category,
     title: selectedBoard.value.title,
@@ -807,18 +806,6 @@ function confirmDelete() {
   color: var(--text);
   font-family: var(--sans);
   box-sizing: border-box;
-}
-
-.form-input:disabled {
-  opacity: 0.75;
-  background-color: var(--accent-bg);
-  cursor: not-allowed;
-}
-
-.form-help-text {
-  font-size: 0.8rem;
-  color: var(--sub);
-  opacity: 0.8;
 }
 
 .form-textarea {
