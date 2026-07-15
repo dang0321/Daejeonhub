@@ -1,22 +1,17 @@
 <template>
   <div class="board-page">
+    <!-- [기존 유지] 상단 '게시판' 헤더 영역 -->
     <header class="board-header">
       <div class="header-top">
         <h1>게시판</h1>
-
-        <!-- 우측 끝 목록 이동 / 취소 버튼 제어 -->
-        <div class="board-actions" v-if="isCreating || isEditing">
-          <button class="secondary-button" type="button" @click="cancelForm">취소 · 목록으로</button>
-        </div>
-        <div class="board-actions" v-else-if="selectedBoard">
+        <div class="board-actions" v-if="selectedBoard && !isCreating && !isEditing">
           <button class="secondary-button" type="button" @click="clearSelection">목록으로</button>
         </div>
       </div>
 
-      <!-- 목록 보기 화면일 때만 표시되는 헤더 컨트롤 영역 -->
+      <!-- [기존 유지] 목록 보기 화면의 헤더 컨트롤 -->
       <div class="board-actions main-actions" v-if="!selectedBoard && !isCreating && !isEditing">
         <div class="search-and-category">
-          <!-- 돋보기 아이콘이 들어간 검색 박스 -->
           <div class="search-box">
             <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="11" cy="11" r="8"></circle>
@@ -30,7 +25,6 @@
             />
           </div>
 
-          <!-- 카테고리 선택 탭/버튼 메뉴 -->
           <div class="category-tabs">
             <button
               v-for="category in categories"
@@ -45,12 +39,11 @@
           </div>
         </div>
 
-        <!-- 우측 끝 글쓰기 버튼 -->
         <button class="primary-button write-button" type="button" @click="startCreate">글쓰기</button>
       </div>
     </header>
 
-    <!-- 1. 목록 화면 (건드리지 않은 100점 레이아웃) -->
+    <!-- [기존 유지] 1. 목록 화면 -->
     <section class="board-content" v-if="!selectedBoard && !isCreating && !isEditing">
       <section class="board-list-wrapper">
         <div v-if="filteredBoards.length === 0" class="empty-state">
@@ -58,7 +51,6 @@
         </div>
 
         <div v-else class="board-table-container">
-          <!-- 게시판 테이블 헤더 -->
           <div class="board-table-header">
             <span class="col-category">분류</span>
             <span class="col-title">제목</span>
@@ -96,11 +88,9 @@
           <button type="button" class="page-button" :disabled="currentPage === 1" @click="goToPage(1)">
             ««
           </button>
-
           <button type="button" class="page-button" :disabled="currentPage === 1" @click="currentPage -= 1">
             이전
           </button>
-
           <div class="page-number-group">
             <button
               v-for="page in pageNumbers"
@@ -113,11 +103,9 @@
               {{ page }}
             </button>
           </div>
-
           <button type="button" class="page-button" :disabled="currentPage === totalPages" @click="currentPage += 1">
             다음
           </button>
-
           <button type="button" class="page-button" :disabled="currentPage === totalPages" @click="goToPage(totalPages)">
             »»
           </button>
@@ -125,11 +113,10 @@
       </section>
     </section>
 
-    <!-- 2. 상세보기 화면 (등록일 포맷 복구 + 파이프라인 | 구분선 완벽 원복) -->
+    <!-- [기존 유지] 2. 상세보기 화면 (이 레이아웃을 아래 글쓰기 폼이 완벽하게 복사합니다) -->
     <section class="board-content" v-else-if="selectedBoard && !isCreating && !isEditing">
       <section class="board-detail">
         <div class="detail-card">
-          <!-- 상단 가로 정렬 헤더 -->
           <div class="detail-heading">
             <div class="detail-title-wrap">
               <span class="board-list-category detail-badge" :class="getCategoryClass(selectedBoard.category)">
@@ -141,20 +128,16 @@
             <div class="detail-meta-wrap">
               <span class="detail-meta-item">
                 <span class="meta-label">작성자</span>
-                <!-- 목록의 .board-item-author 색상 및 투명도와 100% 일치 -->
                 <span class="meta-value-author">{{ selectedBoard.nickname }}</span>
               </span>
-              <!-- 원래 좋아하셨던 깔끔한 세로줄 구분선 복원 -->
               <span class="detail-meta-divider">|</span>
               <span class="detail-meta-item">
                 <span class="meta-label">등록일</span>
-                <!-- 상세 화면만의 본래 등록일 날짜 형식(yyyy-mm-dd hh:min) 완벽 복구 -->
                 <span class="meta-value-date">{{ formatFullDate(selectedBoard.createdAt) }}</span>
               </span>
             </div>
           </div>
 
-          <!-- 본문 내용 -->
           <div class="detail-body">
             <p class="detail-content">{{ selectedBoard.content }}</p>
           </div>
@@ -167,63 +150,80 @@
       </section>
     </section>
 
-    <!-- 3. 글쓰기 및 수정 화면 -->
+    <!-- 3. [똑같이!!!] 상세조회 디자인과 100% 동일하게 일치시킨 글쓰기/수정 화면 -->
     <section class="board-content" v-else>
-      <form class="board-form-page" @submit.prevent="submitForm">
-        <div class="form-header">
-          <h2>{{ isCreating ? '글쓰기' : '수정' }}</h2>
-          <button class="secondary-button" type="button" @click="cancelForm">취소 · 목록으로</button>
-        </div>
+      <form class="board-detail" @submit.prevent="submitForm">
+        <div class="detail-card">
+          <div class="detail-heading">
+            <!-- 1) 배너 및 제목부: 상세조회와 동일한 마크업 및 css 적용 -->
+            <div class="detail-title-wrap">
+              <!-- 상세조회 배너 클래스 'board-list-category detail-badge' 적용 및 셀렉터 내장 -->
+              <span class="board-list-category detail-badge editor-category-badge" :class="getCategoryClass(form.category)">
+                {{ form.category }}
+                <select v-model="form.category" class="editor-select-overlay">
+                  <option
+                    v-for="category in categories.filter(c => c !== '전체')"
+                    :key="category"
+                    :value="category"
+                  >
+                    {{ category }}
+                  </option>
+                </select>
+              </span>
+              <!-- 밑줄 및 테두리를 완벽하게 제거하여 상세 텍스트와 완벽 일치 -->
+              <input 
+                v-model="form.title" 
+                type="text" 
+                required 
+                maxlength="100" 
+                placeholder="제목을 입력하세요"
+                class="editor-title-input" 
+              />
+            </div>
+            
+            <!-- 2) 작성자 및 비밀번호부: 상세조회의 'detail-meta-wrap' 클래스 및 메타구조 그대로 차용 -->
+            <div class="detail-meta-wrap">
+              <span class="detail-meta-item">
+                <span class="meta-label">작성자</span>
+                <input 
+                  v-model="form.nickname" 
+                  type="text" 
+                  required 
+                  maxlength="15" 
+                  placeholder="닉네임 입력"
+                  class="editor-meta-input" 
+                  :disabled="isEditing"
+                />
+              </span>
+              <span class="detail-meta-divider" v-if="isCreating">|</span>
+              <span class="detail-meta-item" v-if="isCreating">
+                <span class="meta-label">비밀번호</span>
+                <input 
+                  v-model="form.password" 
+                  type="password" 
+                  required 
+                  maxlength="20" 
+                  placeholder="비밀번호 입력"
+                  class="editor-meta-input" 
+                />
+              </span>
+            </div>
+          </div>
 
-        <div class="editor-card">
-          <!-- 카테고리 선택 -->
-          <label class="form-field">
-            <span>카테고리</span>
-            <select
-              v-model="form.category"
-              class="form-input"
-            >
-              <option
-                v-for="category in categories.filter(c => c !== '전체')"
-                :key="category"
-                :value="category"
-              >
-                {{ category }}
-              </option>
-            </select>
-          </label>
-
-          <!-- 닉네임 입력란 -->
-          <label class="form-field">
-            <span>닉네임</span>
-            <input 
-              v-model="form.nickname" 
-              type="text" 
+          <!-- 본문 입력 영역 -->
+          <div class="detail-body">
+            <textarea 
+              v-model="form.content" 
+              rows="12" 
               required 
-              maxlength="15" 
-              placeholder="닉네임을 입력해주세요 (공백 제외)"
-              class="form-input" 
-              :disabled="isEditing"
-            />
-            <small class="form-help-text" v-if="isEditing">* 작성자 닉네임은 수정할 수 없습니다.</small>
-          </label>
+              maxlength="1000" 
+              placeholder="내용을 입력하세요"
+              class="editor-textarea"
+            ></textarea>
+          </div>
 
-          <label class="form-field">
-            <span>제목</span>
-            <input v-model="form.title" type="text" required maxlength="100" class="form-input" />
-          </label>
-
-          <label class="form-field">
-            <span>내용</span>
-            <textarea v-model="form.content" rows="12" required maxlength="1000" class="form-textarea"></textarea>
-          </label>
-
-          <label class="form-field" v-if="isCreating">
-            <span>비밀번호</span>
-            <input v-model="form.password" type="password" required maxlength="20" class="form-input" />
-          </label>
-
-          <div class="form-actions">
+          <!-- 하단 버튼 영역 -->
+          <div class="detail-actions">
             <button class="secondary-button" type="button" @click="cancelForm">취소</button>
             <button class="primary-button" type="submit">저장</button>
           </div>
@@ -621,7 +621,7 @@ function confirmDelete() {
   gap: 24px;
 }
 
-/* --- 100점짜리 목록 조회 스타일 (철저히 보존) --- */
+/* --- 목록 조회 스타일 --- */
 .board-list-wrapper,
 .board-detail {
   width: 100%;
@@ -795,7 +795,7 @@ function confirmDelete() {
   flex-wrap: wrap;
 }
 
-/* --- 목록 조회와 100% 동기화된 상세정보 메타 스타일 --- */
+/* --- 상세정보 카드 스타일 --- */
 .detail-card {
   display: grid;
   gap: 24px;
@@ -837,7 +837,6 @@ function confirmDelete() {
   word-break: break-all;
 }
 
-/* 목록 정보 색상 및 투명도 완벽 동기화 */
 .detail-meta-wrap {
   display: flex;
   align-items: center;
@@ -852,30 +851,26 @@ function confirmDelete() {
   gap: 6px;
 }
 
-/* 라벨 텍스트 색상 및 투명도 설정 (차분하게 서브 텍스트화) */
 .meta-label {
   font-weight: 400;
   color: var(--text);
   opacity: 0.55; 
 }
 
-/* ★ 작성자명 색상: 목록의 `.board-item-author`와 100% 일치 */
 .meta-value-author {
   font-size: 0.85rem;
   font-weight: 400;
   color: var(--text);
-  opacity: 0.8; /* 목록 작성자 투명도와 동일하게 일치 */
+  opacity: 0.8; 
 }
 
-/* ★ 등록일 색상: 목록의 `.board-item-meta`와 100% 일치 */
 .meta-value-date {
   font-size: 0.82rem;
   font-weight: 400;
   color: var(--text);
-  opacity: 0.55; /* 목록 등록일 투명도와 동일하게 일치 */
+  opacity: 0.55; 
 }
 
-/* 원하셨던 본연의 깔끔하고 정돈된 버티컬 바(|) 구분선 복구 */
 .detail-meta-divider {
   color: var(--text);
   opacity: 0.3;
@@ -899,8 +894,7 @@ function confirmDelete() {
   font-size: 1.08rem;
 }
 
-.detail-actions,
-.form-actions {
+.detail-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
@@ -936,72 +930,96 @@ function confirmDelete() {
   border-color: var(--point);
 }
 
-.board-form-page {
+/* ==========================================
+   🖋️ [신규 일치화] 글쓰기 전용 레이아웃 커스텀 스타일
+   ========================================== */
+
+/* 1. 배너/카테고리 뱃지 스타일 동기화 (span 안에 select를 투명하게 배치) */
+.editor-category-badge {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.editor-select-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  display: grid;
-  gap: 16px;
-  padding: 20px 0;
+  height: 100%;
+  opacity: 0; /* 완전 투명하게 만들어서 배경 뱃지 스타일이 그대로 비치게 함 */
+  cursor: pointer;
 }
 
-.form-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-}
-
-.form-header h2 {
-  margin: 0;
+/* 2. 제목 아래 테두리 완전히 제거 (상세페이지와 동일하게 텍스트만 표시) */
+.editor-title-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 1.4rem;
+  font-weight: 700;
   color: var(--text-h);
+  outline: none;
+  padding: 0;
   font-family: var(--heading);
-  font-size: 1.3rem;
 }
 
-.editor-card {
-  width: 100%;
-  display: grid;
-  gap: 16px;
-  padding: 24px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface);
-  box-shadow: var(--shadow);
-}
-
-.form-field {
-  display: grid;
-  gap: 8px;
+.editor-title-input::placeholder {
   color: var(--text);
-  font-size: 0.95rem;
+  opacity: 0.25;
 }
 
-.form-input,
-.form-textarea {
+/* 3. 작성자 및 패스워드 입력 필드 (상세조회 스타일 박살내지 않도록 테두리 제거 및 일치) */
+.editor-meta-input {
+  border: none;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  color: var(--text);
+  font-size: 0.85rem;
+  outline: none;
+  width: 80px;
+  padding: 0;
+  font-family: var(--sans);
+}
+
+.editor-meta-input:focus {
+  border-bottom-color: var(--sub); /* 포커스 시에만 하단 실선 표시 */
+}
+
+.editor-meta-input::placeholder {
+  color: var(--text);
+  opacity: 0.3;
+}
+
+.editor-meta-input:disabled {
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
+/* 본문 영역 */
+.editor-textarea {
   width: 100%;
+  min-height: 260px;
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 10px 12px;
+  border-radius: 8px;
   background: var(--bg);
   color: var(--text);
+  font-size: 1.02rem;
+  line-height: 1.8;
+  padding: 16px;
+  outline: none;
+  resize: vertical;
   font-family: var(--sans);
   box-sizing: border-box;
 }
 
-.form-input:disabled {
-  opacity: 0.75;
-  background-color: var(--accent-bg);
-  cursor: not-allowed;
+.editor-textarea:focus {
+  border-color: var(--sub);
 }
 
-.form-help-text {
-  font-size: 0.8rem;
-  color: var(--sub);
-  opacity: 0.8;
-}
-
-.form-textarea {
-  min-height: 400px;
-  resize: vertical;
+.editor-textarea::placeholder {
+  color: var(--text);
+  opacity: 0.35;
 }
 
 .empty-state {
@@ -1077,11 +1095,6 @@ function confirmDelete() {
     min-width: 0;
   }
 
-  .form-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
   .detail-card {
     padding: 20px;
   }
@@ -1097,8 +1110,14 @@ function confirmDelete() {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
+    width: 100%;
   }
   
+  .editor-category-select,
+  .editor-title-input {
+    width: 100%;
+  }
+
   .detail-meta-wrap {
     width: 100%;
     justify-content: flex-start;
