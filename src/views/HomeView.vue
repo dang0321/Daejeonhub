@@ -1,10 +1,14 @@
 <script setup>
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
 const regions = [
-  { name: '동구',   description: '대전 동부' },
-  { name: '중구',   description: '대전 중심부' },
-  { name: '서구',   description: '대전 서부' },
-  { name: '유성구', description: '대전 북서부 · 관광지 밀집' },
-  { name: '대덕구', description: '대전 북부' }
+  { name: '동구', slug: 'donggu', description: '대전 동부의 문화와 생활공간' },
+  { name: '중구', slug: 'junggu', description: '대전 중심부의 역사와 상권' },
+  { name: '서구', slug: 'seogu', description: '대전 서부의 주거와 산업의 중심' },
+  { name: '유성구', slug: 'yuseonggu', description: '대전 북서부 · 관광지 밀집' },
+  { name: '대덕구', slug: 'daeduckgu', description: '대전 북부의 과학·산업 도시' }
 ]
 
 const services = [
@@ -24,6 +28,10 @@ const services = [
     description: '24시간 대전 정보 상담 서비스'
   }
 ]
+
+const goToRegion = (slug) => {
+  router.push({ name: 'Region', params: { regionName: slug } })
+}
 </script>
 
 <template>
@@ -41,11 +49,17 @@ const services = [
       <div class="container">
         <h2>대전 권역 소개</h2>
         <div class="regions-grid">
-          <div v-for="region in regions" :key="region.name" class="region-card">
+          <button
+            v-for="region in regions"
+            :key="region.name"
+            type="button"
+            class="region-card"
+            @click="goToRegion(region.slug)"
+          >
             <div class="region-icon">🏘️</div>
             <h3>{{ region.name }}</h3>
             <p>{{ region.description }}</p>
-          </div>
+          </button>
         </div>
       </div>
     </section>
@@ -159,6 +173,15 @@ const services = [
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
+  border: 1px solid #e5e7eb;
+  width: 100%;
+}
+
+.region-card:hover,
+.region-card:focus-visible {
+  outline: none;
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
 }
 
 .region-card:hover {

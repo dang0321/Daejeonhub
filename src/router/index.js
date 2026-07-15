@@ -5,6 +5,7 @@ import HomeView from '../views/HomeView.vue'
 import BoardView from '../views/BoardView.vue'
 import MapView from '../views/MapView.vue'
 import ChatView from '../views/ChatView.vue'
+import RegionView from '../views/RegionView.vue'
 
 const routes = [
   {
@@ -26,6 +27,11 @@ const routes = [
     path: '/chat',
     name: 'Chat',
     component: ChatView
+  },
+  {
+    path: '/region/:regionName',
+    name: 'Region',
+    component: RegionView
   }
 ]
 
