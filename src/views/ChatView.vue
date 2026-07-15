@@ -7,7 +7,7 @@ const STORAGE_KEY = 'localhub_chat_history'
 const defaultMessages = () => [
   {
     role: 'assistant',
-    content: '안녕하세요! 대전·충청권 여행이나 관광 정보에 대해 무엇이든 물어보세요.'
+    content: '안녕하세요! 대전 여행이나 관광 정보에 대해 무엇이든 물어보세요.'
   }
 ]
 
@@ -108,7 +108,7 @@ const clearChat = () => {
     <div class="chat-header">
       <div>
         <h2>AI 여행 챗봇</h2>
-        <p>대전·충청권 여행 정보와 관광 추천을 실시간으로 확인해보세요.</p>
+        <p>대전 여행 정보와 관광 추천을 실시간으로 확인해보세요.</p>
       </div>
       <button class="clear-button" type="button" @click="clearChat">
         대화 초기화

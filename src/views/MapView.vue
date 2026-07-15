@@ -247,7 +247,7 @@ onBeforeUnmount(clearMarkers)
   <section class="map-page">
     <div class="map-toolbar">
       <div>
-        <h2>대전·충청권 지도</h2>
+        <h2>대전 지도</h2>
         <p>목록에서 장소를 클릭하면 지도에서 위치를 짚어줍니다.</p>
       </div>
       <div class="filter-group">
