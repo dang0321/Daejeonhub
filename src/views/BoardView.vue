@@ -1,27 +1,56 @@
 <template>
   <div class="board-page">
     <header class="board-header">
-      <h1>게시판</h1>
+      <div class="header-top">
+        <h1>게시판</h1>
 
-      <div class="board-actions" v-if="!selectedBoard && !isCreating && !isEditing">
-        <input
-          v-model="searchTerm"
-          type="search"
-          placeholder="제목 또는 내용을 검색하세요"
-          class="search-input"
-        />
-        <button class="primary-button" type="button" @click="startCreate">글쓰기</button>
+        <!-- 우측 끝 목록 이동 / 취소 버튼 제어 -->
+        <div class="board-actions" v-if="isCreating || isEditing">
+          <button class="secondary-button" type="button" @click="cancelForm">취소 · 목록으로</button>
+        </div>
+        <div class="board-actions" v-else-if="selectedBoard">
+          <button class="secondary-button" type="button" @click="clearSelection">목록으로</button>
+        </div>
       </div>
 
-      <div class="board-actions" v-else-if="isCreating || isEditing">
-        <button class="secondary-button" type="button" @click="cancelForm">취소 · 목록으로</button>
-      </div>
+      <!-- 목록 보기 화면일 때만 표시되는 헤더 컨트롤 영역 (검색창 + 카테고리 탭 + 글쓰기 버튼) -->
+      <div class="board-actions main-actions" v-if="!selectedBoard && !isCreating && !isEditing">
+        <div class="search-and-category">
+          <!-- 돋보기 아이콘이 들어간 검색 박스 -->
+          <div class="search-box">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input
+              v-model="searchTerm"
+              type="search"
+              placeholder="제목 또는 내용을 검색하세요"
+              class="search-input"
+            />
+          </div>
 
-      <div class="board-actions" v-else>
-        <button class="secondary-button" type="button" @click="clearSelection">목록으로</button>
+          <!-- 카테고리 선택 탭/버튼 메뉴 -->
+          <div class="category-tabs">
+            <button
+              v-for="category in categories"
+              :key="category"
+              type="button"
+              class="category-tab-btn"
+              :class="{ active: selectedCategory === category }"
+              @click="selectedCategory = category"
+            >
+              {{ category }}
+            </button>
+          </div>
+        </div>
+
+        <!-- 우측 끝 글쓰기 버튼 -->
+        <button class="primary-button write-button" type="button" @click="startCreate">글쓰기</button>
       </div>
     </header>
 
+    <!-- 1. 목록 화면 -->
     <section class="board-content" v-if="!selectedBoard && !isCreating && !isEditing">
       <section class="board-list-wrapper">
         <div v-if="filteredBoards.length === 0" class="empty-state">
@@ -36,13 +65,17 @@
             @click="selectBoard(board.id)"
           >
             <div class="board-item-main">
-              <strong>{{ board.title }}</strong>
+              <strong>
+                <span class="board-list-category">[{{ board.category }}]</span>
+                {{ board.title }}
+              </strong>
               <p>{{ board.content }}</p>
             </div>
             <span class="board-item-meta">{{ formatDate(board.createdAt) }}</span>
           </li>
         </ul>
 
+        <!-- 페이지네이션 -->
         <div v-if="filteredBoards.length > 0" class="pagination">
           <button type="button" class="page-button" :disabled="currentPage === 1" @click="goToPage(1)">
             ««
@@ -76,11 +109,15 @@
       </section>
     </section>
 
+    <!-- 2. 상세보기 화면 -->
     <section class="board-content" v-else-if="selectedBoard && !isCreating && !isEditing">
       <section class="board-detail">
         <div class="detail-card">
           <div class="detail-heading">
             <div class="detail-title-wrap">
+              <span class="board-category">
+                {{ selectedBoard.category }}
+              </span>
               <h3>{{ selectedBoard.title }}</h3>
             </div>
             <div class="detail-date-wrap">
@@ -101,6 +138,7 @@
       </section>
     </section>
 
+    <!-- 3. 글쓰기 및 수정 화면 -->
     <section class="board-content" v-else>
       <form class="board-form-page" @submit.prevent="submitForm">
         <div class="form-header">
@@ -109,6 +147,25 @@
         </div>
 
         <div class="editor-card">
+          <!-- 카테고리는 사용자가 보고 있던 카테고리 기준으로 자동 선택 및 유지됩니다 -->
+          <label class="form-field">
+            <span>카테고리</span>
+            <select
+              v-model="form.category"
+              class="form-input"
+              disabled
+            >
+              <option
+                v-for="category in categories.filter(c => c !== '전체')"
+                :key="category"
+                :value="category"
+              >
+                {{ category }}
+              </option>
+            </select>
+            <small class="form-help-text">* 카테고리는 목록 탭 선택 상태에 따라 자동 지정됩니다.</small>
+          </label>
+
           <label class="form-field">
             <span>제목</span>
             <input v-model="form.title" type="text" required maxlength="100" class="form-input" />
@@ -144,28 +201,40 @@ import {
 } from '../services/boardService'
 
 const searchTerm = ref('')
+const categories = ['전체', '관광', '맛집', '자유']
+const selectedCategory = ref('전체')
 const selectedId = ref(null)
 const isCreating = ref(false)
 const isEditing = ref(false)
-const form = ref({ title: '', content: '', password: '' })
+
+const form = ref({
+  category: '자유',
+  title: '',
+  content: '',
+  password: ''
+})
+
 const boards = ref(listBoards())
 const pageSize = 5
 const currentPage = ref(1)
 
 const filteredBoards = computed(() => {
   const normalized = searchTerm.value.trim().toLowerCase()
-  const items = boards.value
 
-  const filtered = normalized
-    ? items.filter((item) => {
-        return (
-          item.title.toLowerCase().includes(normalized) ||
-          item.content.toLowerCase().includes(normalized)
-        )
-      })
-    : items
+  return boards.value
+    .filter((item) => {
+      const searchMatched =
+        !normalized ||
+        item.title.toLowerCase().includes(normalized) ||
+        item.content.toLowerCase().includes(normalized)
 
-  return filtered.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      const categoryMatched =
+        selectedCategory.value === '전체' ||
+        item.category === selectedCategory.value
+
+      return searchMatched && categoryMatched
+    })
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 })
 
 const totalPages = computed(() => Math.max(1, Math.ceil(filteredBoards.value.length / pageSize)))
@@ -187,7 +256,7 @@ const selectedBoard = computed(() => {
   return boards.value.find((item) => item.id === selectedId.value) || null
 })
 
-watch(searchTerm, () => {
+watch([searchTerm, selectedCategory], () => {
   currentPage.value = 1
 })
 
@@ -226,7 +295,16 @@ function startCreate() {
   selectedId.value = null
   isCreating.value = true
   isEditing.value = false
-  form.value = { title: '', content: '', password: '' }
+
+  // [중요] 글쓰기를 누를 때 현재 필터링된 카테고리를 할당합니다. '전체'일 경우 기본값은 '자유'입니다.
+  const targetCategory = selectedCategory.value === '전체' ? '자유' : selectedCategory.value
+
+  form.value = {
+    category: targetCategory,
+    title: '',
+    content: '',
+    password: ''
+  }
 }
 
 function startEdit() {
@@ -242,7 +320,10 @@ function startEdit() {
 
   isCreating.value = false
   isEditing.value = true
+  
+  // 기존 게시글의 카테고리를 그대로 유지합니다.
   form.value = {
+    category: selectedBoard.value.category,
     title: selectedBoard.value.title,
     content: selectedBoard.value.content,
     password
@@ -253,12 +334,18 @@ function cancelForm() {
   selectedId.value = null
   isCreating.value = false
   isEditing.value = false
-  form.value = { title: '', content: '', password: '' }
+  form.value = {
+    category: '자유',
+    title: '',
+    content: '',
+    password: ''
+  }
 }
 
 function submitForm() {
   if (isCreating.value) {
     createBoard({
+      category: form.value.category,
       title: form.value.title,
       content: form.value.content,
       password: form.value.password
@@ -276,6 +363,7 @@ function submitForm() {
   updateBoard(
     selectedBoard.value.id,
     {
+      category: form.value.category,
       title: form.value.title,
       content: form.value.content
     },
@@ -319,35 +407,125 @@ function confirmDelete() {
 
 .board-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
   margin-bottom: 18px;
-  gap: 12px;
+  gap: 16px;
   padding: 18px 0 20px;
   border-bottom: 1px solid var(--border);
 }
 
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
 .board-header h1 {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   color: var(--text-h);
   font-family: var(--heading);
+  flex-shrink: 0;
 }
 
 .board-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+}
+
+/* 
+  [검색 및 카테고리 탭 정렬] 
+  검색과 탭을 한 곳에 묶고 글쓰기 버튼을 우측 끝으로 밀어냅니다.
+*/
+.main-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: none;
+  gap: 20px;
+}
+
+.search-and-category {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+/* 돋보기 아이콘을 품은 Wrapper */
+.search-box {
+  position: relative;
+  flex: 1;
+  max-width: 320px;
+  display: flex;
+  align-items: center;
+}
+
+/* 돋보기 아이콘 스타일 */
+.search-icon {
+  position: absolute;
+  left: 12px;
+  width: 16px;
+  height: 16px;
+  color: var(--sub);
+  opacity: 0.6;
+  pointer-events: none;
 }
 
 .search-input {
-  min-width: 260px;
-  padding: 9px 12px;
+  width: 100%;
+  padding: 10px 12px 10px 38px;
   border: 1px solid var(--border);
   border-radius: 6px;
   background: var(--surface);
   color: var(--text);
   font-family: var(--sans);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.search-input:focus {
+  border-color: var(--sub);
+}
+
+/* 카테고리 탭 버튼 스타일 */
+.category-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.category-tab-btn {
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.category-tab-btn:hover {
+  background: var(--accent-bg);
+  border-color: var(--sub);
+}
+
+.category-tab-btn.active {
+  background: var(--sub);
+  color: var(--bg);
+  border-color: var(--sub);
+}
+
+.write-button {
+  flex-shrink: 0;
+  padding: 10px 18px;
+  font-weight: 600;
 }
 
 .board-content {
@@ -404,6 +582,15 @@ function confirmDelete() {
   font-size: 0.96rem;
   color: var(--text-h);
   font-family: var(--heading);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.board-list-category {
+  color: var(--sub);
+  font-weight: 700;
+  font-size: 0.9rem;
 }
 
 .board-item-main p {
@@ -479,9 +666,11 @@ function confirmDelete() {
 
 .detail-title-wrap {
   display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   flex: 1 1 auto;
-  align-items: flex-end;
   min-width: 0;
+  gap: 4px;
 }
 
 .detail-heading h3 {
@@ -620,6 +809,18 @@ function confirmDelete() {
   box-sizing: border-box;
 }
 
+.form-input:disabled {
+  opacity: 0.75;
+  background-color: var(--accent-bg);
+  cursor: not-allowed;
+}
+
+.form-help-text {
+  font-size: 0.8rem;
+  color: var(--sub);
+  opacity: 0.8;
+}
+
 .form-textarea {
   min-height: 400px;
   resize: vertical;
@@ -629,6 +830,17 @@ function confirmDelete() {
   color: var(--text);
   padding: 24px 12px;
   text-align: center;
+}
+
+.board-category {
+  display: inline-block;
+  padding: 2px 8px;
+  margin-bottom: 6px;
+  border-radius: 999px;
+  background: var(--sub);
+  color: var(--bg);
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
 @media (max-width: 900px) {
@@ -642,9 +854,23 @@ function confirmDelete() {
     align-items: stretch;
   }
 
-  .board-actions {
+  .main-actions {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .search-and-category {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-box {
+    max-width: none;
+  }
+
+  .write-button {
+    margin-left: 0;
+    margin-top: 8px;
   }
 
   .search-input {
