@@ -67,7 +67,7 @@ const goBack = () => {
 <style scoped>
 .region-view {
   min-height: 70vh;
-  background: linear-gradient(135deg, #f8f9ff 0%, #eef2ff 100%);
+  background: linear-gradient(135deg, var(--main) 0%, #f7fcf7 100%);
   padding: 60px 20px;
 }
 
@@ -78,7 +78,7 @@ const goBack = () => {
 
 .back-btn {
   border: none;
-  background: #4f46e5;
+  background: var(--sub);
   color: white;
   padding: 10px 16px;
   border-radius: 999px;
@@ -90,13 +90,14 @@ const goBack = () => {
   background: white;
   border-radius: 20px;
   padding: 40px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
 }
 
 .badge {
   display: inline-block;
-  background: #eef2ff;
-  color: #4338ca;
+  background: var(--main);
+  color: var(--sub);
   padding: 6px 12px;
   border-radius: 999px;
   font-size: 13px;
@@ -106,24 +107,25 @@ const goBack = () => {
 h1 {
   font-size: 32px;
   margin-bottom: 8px;
+  color: var(--sub);
 }
 
 h2 {
   font-size: 22px;
-  color: #4f46e5;
+  color: var(--sub);
   margin-bottom: 16px;
 }
 
 .description {
   font-size: 16px;
   line-height: 1.7;
-  color: #4b5563;
+  color: #516952;
   margin-bottom: 16px;
 }
 
 ul {
   padding-left: 20px;
-  color: #374151;
+  color: #425a43;
 }
 
 li {

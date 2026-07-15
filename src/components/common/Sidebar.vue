@@ -24,8 +24,8 @@ const menuItems = [
 <style scoped>
 .sidebar {
   width: 200px;
-  background: #f5f5f5;
-  border-right: 1px solid #ddd;
+  background: var(--main);
+  border-right: 1px solid var(--border);
   padding: 20px;
 }
 
@@ -43,17 +43,17 @@ a {
   display: block;
   padding: 10px;
   text-decoration: none;
-  color: #333;
-  border-radius: 4px;
-  transition: background 0.3s;
+  color: var(--sub);
+  border-radius: 8px;
+  transition: background 0.3s, color 0.3s;
 }
 
 a:hover {
-  background: #e0e0e0;
+  background: rgba(255, 202, 40, 0.22);
 }
 
 a.router-link-active {
-  background: #007bff;
+  background: var(--sub);
   color: white;
 }
 </style>

@@ -144,11 +144,12 @@ const clearChat = () => {
 .chat-header h2 {
   margin: 0;
   font-size: 24px;
+  color: var(--sub);
 }
 
 .chat-header p {
   margin: 4px 0 0;
-  color: #666;
+  color: #587058;
 }
 
 .clear-button,
@@ -161,8 +162,8 @@ const clearChat = () => {
 }
 
 .clear-button {
-  background: #f1f3f5;
-  color: #333;
+  background: var(--main);
+  color: var(--sub);
 }
 
 .chat-card {
@@ -170,11 +171,11 @@ const clearChat = () => {
   flex-direction: column;
   height: calc(100vh - 220px);
   min-height: 480px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border);
   border-radius: 16px;
   overflow: hidden;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+  background: white;
+  box-shadow: var(--shadow);
 }
 
 .message-list {
@@ -184,7 +185,7 @@ const clearChat = () => {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background: #f8fafc;
+  background: #f7faf6;
 }
 
 .message-row {
@@ -199,12 +200,12 @@ const clearChat = () => {
   max-width: 75%;
   padding: 12px 14px;
   border-radius: 12px;
-  background: #e9f2ff;
-  color: #1f2937;
+  background: #eaf6e9;
+  color: #274425;
 }
 
 .message-row.user .message-bubble {
-  background: #007bff;
+  background: var(--sub);
   color: white;
 }
 
@@ -212,7 +213,7 @@ const clearChat = () => {
   display: block;
   margin-bottom: 4px;
   font-size: 13px;
-  opacity: 0.85;
+  opacity: 0.9;
 }
 
 .message-bubble p {
@@ -223,16 +224,16 @@ const clearChat = () => {
 
 .chat-footer {
   padding: 12px;
-  border-top: 1px solid #e5e7eb;
-  background: #fff;
+  border-top: 1px solid var(--border);
+  background: white;
 }
 
 .error-box {
   margin-bottom: 8px;
   padding: 8px 10px;
   border-radius: 8px;
-  background: #fff1f2;
-  color: #be123c;
+  background: rgba(255, 202, 40, 0.18);
+  color: #7a5f00;
   font-size: 14px;
 }
 
@@ -244,14 +245,14 @@ const clearChat = () => {
 textarea {
   flex: 1;
   resize: none;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 10px 12px;
   font: inherit;
 }
 
 .send-button {
-  background: #007bff;
+  background: var(--sub);
   color: white;
   min-width: 80px;
 }

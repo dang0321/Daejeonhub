@@ -39,7 +39,7 @@ const goToRegion = (slug) => {
     <!-- 상단: 권역 소개 -->
     <section class="hero">
       <div class="hero-content">
-        <h1>LocalHub</h1>
+        <h1>DaejeonHub</h1>
         <p>대전의 모든 정보를 한 곳에서</p>
       </div>
     </section>
@@ -83,7 +83,7 @@ const goToRegion = (slug) => {
       <div class="container">
         <div class="data-content">
           <h2>공공데이터 기반</h2>
-          <p>LocalHub는 대전광역시 및 정부에서 제공하는 공공데이터를 기반으로 신뢰할 수 있는 정보를 제공합니다.</p>
+          <p>DaejeonHub는 대전광역시 및 정부에서 제공하는 공공데이터를 기반으로 신뢰할 수 있는 정보를 제공합니다.</p>
           <div class="data-features">
             <div class="feature">
               <span class="feature-icon">✓</span>
@@ -104,7 +104,7 @@ const goToRegion = (slug) => {
 
     <!-- Footer -->
     <footer class="footer">
-      <p>&copy; 2024 LocalHub. All rights reserved.</p>
+      <p>&copy; 2026 DaejeonHub. All rights reserved.</p>
     </footer>
   </div>
 </template>
@@ -126,9 +126,8 @@ const goToRegion = (slug) => {
   padding: 0 20px;
 }
 
-/* Hero 섹션 */
 .hero {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--sub) 0%, #3f6d34 100%);
   color: white;
   padding: 80px 20px;
   text-align: center;
@@ -138,25 +137,25 @@ const goToRegion = (slug) => {
   font-size: 56px;
   margin-bottom: 10px;
   font-weight: bold;
+  color: white;
 }
 
 .hero-content p {
   font-size: 24px;
-  opacity: 0.9;
+  opacity: 0.95;
   font-weight: 300;
 }
 
-/* 권역 소개 섹션 */
 .regions-section {
   padding: 80px 20px;
-  background: #f8f9fa;
+  background: var(--main);
 }
 
 .regions-section h2 {
   text-align: center;
   font-size: 36px;
   margin-bottom: 50px;
-  color: #333;
+  color: var(--sub);
 }
 
 .regions-grid {
@@ -170,10 +169,10 @@ const goToRegion = (slug) => {
   padding: 30px;
   border-radius: 12px;
   text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border);
   width: 100%;
 }
 
@@ -181,12 +180,7 @@ const goToRegion = (slug) => {
 .region-card:focus-visible {
   outline: none;
   transform: translateY(-5px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
-}
-
-.region-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 10px 24px rgba(45, 90, 39, 0.16);
 }
 
 .region-icon {
@@ -197,15 +191,14 @@ const goToRegion = (slug) => {
 .region-card h3 {
   font-size: 18px;
   margin-bottom: 8px;
-  color: #333;
+  color: var(--sub);
 }
 
 .region-card p {
   font-size: 14px;
-  color: #666;
+  color: #5d6f5b;
 }
 
-/* 서비스 소개 섹션 */
 .services-section {
   padding: 80px 20px;
   background: white;
@@ -215,7 +208,7 @@ const goToRegion = (slug) => {
   text-align: center;
   font-size: 36px;
   margin-bottom: 50px;
-  color: #333;
+  color: var(--sub);
 }
 
 .services-grid {
@@ -225,18 +218,18 @@ const goToRegion = (slug) => {
 }
 
 .service-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: rgba(255, 202, 40, 0.16);
+  color: var(--sub);
   padding: 40px;
   border-radius: 12px;
   text-align: center;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+  box-shadow: var(--shadow);
 }
 
 .service-card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 12px 24px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 12px 24px rgba(45, 90, 39, 0.17);
 }
 
 .service-icon {
@@ -252,14 +245,13 @@ const goToRegion = (slug) => {
 
 .service-card p {
   font-size: 16px;
-  opacity: 0.9;
+  opacity: 0.95;
   line-height: 1.5;
 }
 
-/* 공공데이터 섹션 */
 .data-section {
   padding: 80px 20px;
-  background: #f0f2f5;
+  background: #f4f8f2;
 }
 
 .data-content {
@@ -269,12 +261,12 @@ const goToRegion = (slug) => {
 .data-section h2 {
   font-size: 36px;
   margin-bottom: 20px;
-  color: #333;
+  color: var(--sub);
 }
 
 .data-section > .container > p {
   font-size: 18px;
-  color: #666;
+  color: #516952;
   margin-bottom: 40px;
   line-height: 1.6;
 }
@@ -291,7 +283,7 @@ const goToRegion = (slug) => {
   align-items: center;
   gap: 10px;
   font-size: 16px;
-  color: #333;
+  color: var(--sub);
 }
 
 .feature-icon {
@@ -300,16 +292,15 @@ const goToRegion = (slug) => {
   justify-content: center;
   width: 32px;
   height: 32px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--point) 0%, #ffd96a 100%);
+  color: var(--sub);
   border-radius: 50%;
   font-weight: bold;
   flex-shrink: 0;
 }
 
-/* Footer */
 .footer {
-  background: #333;
+  background: var(--sub);
   color: white;
   text-align: center;
   padding: 20px;

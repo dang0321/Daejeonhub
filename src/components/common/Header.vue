@@ -29,10 +29,10 @@ const menuItems = [
 
 <style scoped>
 .header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--sub) 0%, #3f6d34 100%);
   color: white;
   padding: 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 16px rgba(45, 90, 39, 0.2);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -53,6 +53,7 @@ const menuItems = [
   font-weight: bold;
   letter-spacing: 1px;
   white-space: nowrap;
+  color: white;
 }
 
 .nav {
@@ -76,7 +77,7 @@ const menuItems = [
   display: inline-block;
   padding: 8px 0;
   text-decoration: none;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.85);
   font-size: 16px;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -86,16 +87,15 @@ const menuItems = [
 
 .menu a:hover {
   color: white;
-  border-bottom-color: white;
+  border-bottom-color: var(--point);
 }
 
 .menu a.active {
   color: white;
-  border-bottom-color: white;
+  border-bottom-color: var(--point);
   font-weight: 600;
 }
 
-/* 반응형 디자인 */
 @media (max-width: 768px) {
   .header-container {
     flex-direction: column;

@@ -5,7 +5,7 @@ const currentYear = ref(new Date().getFullYear())
 const contactInfo = [
   { label: '주소', value: '대전광역시' },
   { label: '전화', value: '070-1234-5678' },
-  { label: '이메일', value: 'info@localhub.kr' }
+  { label: '이메일', value: 'info@DaejeonHub.kr' }
 ]
 
 const links = [
@@ -21,7 +21,7 @@ const links = [
       <div class="footer-container">
         <!-- 좌측: 회사 정보 -->
         <div class="footer-section">
-          <h3>LocalHub</h3>
+          <h3>DaejeonHub</h3>
           <p>대전의 모든 정보를 한 곳에서</p>
         </div>
 
@@ -48,7 +48,7 @@ const links = [
 
       <!-- 저작권 -->
       <div class="footer-bottom">
-        <p>&copy; {{ currentYear }} LocalHub. All rights reserved.</p>
+        <p>&copy; {{ currentYear }} DaejeonHub. All rights reserved.</p>
       </div>
     </div>
   </footer>
@@ -56,7 +56,7 @@ const links = [
 
 <style scoped>
 .footer {
-  background: linear-gradient(135deg, #333 0%, #1a1a1a 100%);
+  background: linear-gradient(135deg, var(--sub) 0%, #3b642f 100%);
   color: white;
   margin-top: auto;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -78,18 +78,18 @@ const links = [
 .footer-section h3 {
   font-size: 24px;
   margin-bottom: 10px;
-  color: #667eea;
+  color: var(--point);
 }
 
 .footer-section h4 {
   font-size: 16px;
   margin-bottom: 15px;
-  color: #667eea;
+  color: var(--point);
 }
 
 .footer-section p {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.78);
   line-height: 1.6;
 }
 
@@ -102,7 +102,7 @@ const links = [
 
 .contact-list li {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.78);
   margin-bottom: 10px;
 }
 
@@ -111,25 +111,25 @@ const links = [
 }
 
 .links-list a {
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.78);
   text-decoration: none;
   transition: color 0.3s ease;
   font-size: 14px;
 }
 
 .links-list a:hover {
-  color: #667eea;
+  color: var(--point);
 }
 
 .footer-bottom {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
   padding: 20px 0;
   text-align: center;
 }
 
 .footer-bottom p {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.62);
 }
 
 /* 반응형 디자인 */
