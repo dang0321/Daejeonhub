@@ -626,12 +626,13 @@ function confirmDelete() {
   overflow: hidden;
 }
 
+/* 📐 해결책 적용: 분류 컬럼은 80px로 원상복구하고, 제목과 닉네임의 공간을 넉넉하게 재정렬했습니다. */
 .board-table-header,
 .board-list li {
   display: grid;
-  grid-template-columns: 80px 1fr 110px 100px;
+  grid-template-columns: 80px 1fr 120px 100px;
   align-items: center;
-  gap: 16px;
+  gap: 24px;
 }
 
 .board-table-header {
@@ -641,19 +642,23 @@ function confirmDelete() {
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--text);
-  opacity: 0.6;
+  opacity: 0.8;
 }
 
 .col-category {
   text-align: center;
 }
+
+/* 📐 분류(카테고리) 영역과 제목 사이에 16px의 공간을 밀어내어 분리시킵니다. */
 .col-title {
   text-align: left;
   min-width: 0;
+  padding-left: 16px; 
 }
+
 .col-author {
   text-align: left;
-  padding-left: 8px;
+  padding-left: 16px;
 }
 .col-date {
   text-align: right;
@@ -693,7 +698,6 @@ function confirmDelete() {
   text-overflow: ellipsis;
 }
 
-/* 🎨 카테고리 둥근 뱃지 레이아웃 */
 .board-list-category {
   display: inline-block;
   padding: 3px 8px;
@@ -707,12 +711,6 @@ function confirmDelete() {
   transition: all 0.2s ease;
 }
 
-/* 
-  🎨 리뉴얼된 맑고 화사한 파스텔톤 컬러 팔레트 (칙칙함 완벽 개선)
-  1. 자유 (초록 계열): 싱그럽고 청량한 새싹 민트 그린 
-  2. 맛집 (노랑 계열): 화사하고 상큼한 레몬 허니 옐로우
-  3. 관광 (살구 계열): 노란색과 찰떡 조화를 이루는 달콤한 피치 살구 오렌지
-*/
 .cat-free {
   background: #e6f4ea; 
   border: 1px solid #c2e7cc;
