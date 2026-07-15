@@ -345,6 +345,9 @@ function confirmDelete() {
   margin: 0;
   padding: 24px 28px 40px;
   min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
 }
 
 .board-header {
@@ -360,7 +363,8 @@ function confirmDelete() {
 .board-header h1 {
   margin: 0;
   font-size: 1.2rem;
-  color: var(--sub);
+  color: var(--text-h);
+  font-family: var(--heading);
 }
 
 .board-actions {
@@ -374,8 +378,35 @@ function confirmDelete() {
   padding: 9px 12px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  background: white;
+  background: var(--surface);
   color: var(--text);
+  font-family: var(--sans);
+}
+
+.board-content {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  gap: 24px;
+}
+
+.board-list-wrapper,
+.board-detail {
+  width: 100%;
+  max-width: none;
+  background: transparent;
+  border: none;
+  padding: 20px 0;
+  min-height: 420px;
+}
+
+.board-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
 }
 
 .board-list li {
@@ -384,7 +415,7 @@ function confirmDelete() {
   align-items: flex-start;
   gap: 12px;
   padding: 12px 14px;
-  border-bottom: 1px solid #cbd5e1;
+  border-bottom: 1px solid var(--border);
   cursor: pointer;
   transition: background-color 0.2s ease, transform 0.2s ease;
   border-radius: 6px;
@@ -392,66 +423,261 @@ function confirmDelete() {
 
 .board-list li:hover,
 .board-list li.active {
-  background: var(--main);
+  background: var(--accent-bg);
   transform: translateX(2px);
+}
+
+.board-item-main {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
 }
 
 .board-item-main strong {
   font-size: 0.96rem;
-  color: var(--sub);
+  color: var(--text-h);
+  font-family: var(--heading);
 }
 
 .board-item-main p {
   margin: 0;
   font-size: 0.9rem;
-  color: #6b7280;
+  color: var(--text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.board-item-meta {
+  color: var(--text);
+  font-size: 0.8rem;
+  white-space: nowrap;
+  margin-top: 2px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
 }
 
 .page-button,
 .page-number {
   padding: 8px 10px;
   border: 1px solid var(--border);
-  background: white;
-  color: var(--sub);
+  background: var(--surface);
+  color: var(--text);
   cursor: pointer;
+  font-family: var(--sans);
+}
+
+.page-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .page-number.active {
   background: var(--sub);
   border-color: var(--sub);
-  color: white;
+  color: var(--bg);
+}
+
+.page-number-group {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.detail-toolbar {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 14px;
+}
+
+.detail-card {
+  display: grid;
+  gap: 16px;
+}
+
+.detail-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.detail-title-wrap {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: flex-end;
+  min-width: 0;
+}
+
+.detail-heading h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-h);
+  line-height: 1.4;
+  font-family: var(--heading);
+}
+
+.detail-date-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  color: var(--text);
+  flex-shrink: 0;
+  padding-left: 12px;
+}
+
+.detail-date-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--sub);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.detail-date {
+  font-size: 0.95rem;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.detail-body {
+  padding: 20px 18px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+}
+
+.detail-content {
+  min-height: 240px;
+  white-space: pre-wrap;
+  line-height: 1.9;
+  letter-spacing: 0.015em;
+  margin: 0;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.detail-actions,
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.primary-button,
+.secondary-button,
+.danger-button {
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font-family: var(--sans);
 }
 
 .primary-button {
   background: var(--sub);
-  color: white;
-  border: 1px solid var(--sub);
+  color: var(--bg);
+  border-color: var(--sub);
 }
 
 .secondary-button {
   background: var(--main);
   color: var(--sub);
-  border: 1px solid var(--border);
 }
 
 .danger-button {
-  background: #fff8e1;
-  color: #8a5f00;
+  background: rgba(255, 202, 40, 0.16);
+  color: var(--sub);
   border-color: var(--point);
 }
 
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(36, 64, 36, 0.22);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 40;
+  padding: 18px;
+}
+
 .modal-panel {
-  background: white;
+  width: min(560px, 100%);
+  background: var(--bg);
   border: 1px solid var(--border);
+  padding: 24px;
   box-shadow: var(--shadow);
+}
+
+.modal-panel.small {
+  width: min(420px, 100%);
+}
+
+.modal-form {
+  display: grid;
+  gap: 14px;
+}
+
+.modal-form label {
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text);
 }
 
 .modal-form input,
 .modal-form textarea {
+  width: 100%;
   border: 1px solid var(--border);
+  padding: 10px 12px;
+  font-size: 14px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--sans);
 }
 
 .empty-state {
-  color: #6b7280;
+  color: var(--text);
+  padding: 24px 12px;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .board-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .board-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .board-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-input {
+    min-width: 0;
+  }
 }
 </style>
