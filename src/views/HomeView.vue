@@ -15,22 +15,29 @@ const services = [
   {
     icon: '📋',
     title: '게시판',
-    description: '지역 정보와 뉴스를 공유하는 커뮤니티'
+    description: '지역 정보와 뉴스를 공유하는 커뮤니티',
+    routeName: 'Board'
   },
   {
     icon: '🗺️',
     title: '지도',
-    description: '공공데이터 기반 위치 정보 서비스'
+    description: '공공데이터 기반 위치 정보 서비스',
+    routeName: 'Map'
   },
   {
     icon: '💬',
     title: '챗봇',
-    description: '24시간 대전 정보 상담 서비스'
+    description: '24시간 대전 정보 상담 서비스',
+    routeName: 'Chat'
   }
 ]
 
 const goToRegion = (slug) => {
   router.push({ name: 'Region', params: { regionName: slug } })
+}
+
+const goToService = (routeName) => {
+  router.push({ name: routeName })
 }
 </script>
 
@@ -40,7 +47,7 @@ const goToRegion = (slug) => {
     <section class="hero">
       <div class="hero-content">
         <h1>DaejeonHub</h1>
-        <p>대전의 모든 정보를 한 곳에서</p>
+        <p>대전의 관광지, 문화시설, 맛집 정보를 한 곳에서 편하게 만나보세요.</p>
       </div>
     </section>
 
@@ -69,11 +76,17 @@ const goToRegion = (slug) => {
       <div class="container">
         <h2>우리의 서비스</h2>
         <div class="services-grid">
-          <div v-for="service in services" :key="service.title" class="service-card">
+          <button
+            v-for="service in services"
+            :key="service.title"
+            type="button"
+            class="service-card"
+            @click="goToService(service.routeName)"
+          >
             <div class="service-icon">{{ service.icon }}</div>
             <h3>{{ service.title }}</h3>
             <p>{{ service.description }}</p>
-          </div>
+          </button>
         </div>
       </div>
     </section>
@@ -138,12 +151,23 @@ const goToRegion = (slug) => {
   margin-bottom: 10px;
   font-weight: bold;
   color: white;
+  padding: 12px;
 }
 
 .hero-content p {
   font-size: 24px;
   opacity: 0.95;
   font-weight: 300;
+}
+
+.hero-button {
+  background: var(--point);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 50px;
+  font-weight: bold;
+  margin-top: 10px;
+  cursor: pointer;
 }
 
 .regions-section {
@@ -225,9 +249,15 @@ const goToRegion = (slug) => {
   text-align: center;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   box-shadow: var(--shadow);
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  width: 100%;
 }
 
-.service-card:hover {
+.service-card:hover,
+.service-card:focus-visible {
+  outline: none;
   transform: translateY(-8px);
   box-shadow: 0 12px 24px rgba(45, 90, 39, 0.17);
 }
@@ -309,16 +339,21 @@ const goToRegion = (slug) => {
 
 /* 반응형 디자인 */
 @media (max-width: 768px) {
+  .hero {
+    padding: 72px 20px 64px;
+  }
+
   .hero-content h1 {
-    font-size: 36px;
+    font-size: 40px;
   }
 
   .hero-content p {
     font-size: 18px;
   }
 
-  .hero {
-    padding: 50px 20px;
+  .hero-button {
+    padding: 11px 22px;
+    font-size: 15px;
   }
 
   .regions-section,
@@ -354,32 +389,22 @@ const goToRegion = (slug) => {
 }
 
 @media (max-width: 480px) {
+  .hero {
+    padding: 60px 16px 56px;
+  }
+
   .hero-content h1 {
-    font-size: 28px;
+    font-size: 32px;
   }
 
   .hero-content p {
-    font-size: 16px;
+    font-size: 15px;
+    margin-bottom: 20px;
   }
 
-  .regions-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .region-card {
-    padding: 20px;
-  }
-
-  .region-card h3 {
-    font-size: 16px;
-  }
-
-  .service-card {
-    padding: 30px 20px;
-  }
-
-  .feature {
-    font-size: 14px;
+  .hero-button {
+    width: 100%;
+    max-width: 220px;
   }
 }
 </style>
