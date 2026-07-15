@@ -2,19 +2,28 @@
   <div class="board-page">
     <header class="board-header">
       <h1>게시판</h1>
-      <div class="board-actions" v-if="!selectedBoard">
+
+      <div class="board-actions" v-if="!selectedBoard && !isCreating && !isEditing">
         <input
           v-model="searchTerm"
           type="search"
           placeholder="제목 또는 내용을 검색하세요"
           class="search-input"
         />
-        <button class="primary-button" @click="openCreateModal">글쓰기</button>
+        <button class="primary-button" type="button" @click="startCreate">글쓰기</button>
+      </div>
+
+      <div class="board-actions" v-else-if="isCreating || isEditing">
+        <button class="secondary-button" type="button" @click="cancelForm">취소 · 목록으로</button>
+      </div>
+
+      <div class="board-actions" v-else>
+        <button class="secondary-button" type="button" @click="clearSelection">목록으로</button>
       </div>
     </header>
 
-    <section class="board-content">
-      <section class="board-list-wrapper" v-if="!selectedBoard">
+    <section class="board-content" v-if="!selectedBoard && !isCreating && !isEditing">
+      <section class="board-list-wrapper">
         <div v-if="filteredBoards.length === 0" class="empty-state">
           등록된 게시글이 없습니다.
         </div>
@@ -35,21 +44,11 @@
         </ul>
 
         <div v-if="filteredBoards.length > 0" class="pagination">
-          <button
-            type="button"
-            class="page-button"
-            :disabled="currentPage === 1"
-            @click="goToPage(1)"
-          >
+          <button type="button" class="page-button" :disabled="currentPage === 1" @click="goToPage(1)">
             ««
           </button>
 
-          <button
-            type="button"
-            class="page-button"
-            :disabled="currentPage === 1"
-            @click="currentPage -= 1"
-          >
+          <button type="button" class="page-button" :disabled="currentPage === 1" @click="currentPage -= 1">
             이전
           </button>
 
@@ -66,31 +65,19 @@
             </button>
           </div>
 
-          <button
-            type="button"
-            class="page-button"
-            :disabled="currentPage === totalPages"
-            @click="currentPage += 1"
-          >
+          <button type="button" class="page-button" :disabled="currentPage === totalPages" @click="currentPage += 1">
             다음
           </button>
 
-          <button
-            type="button"
-            class="page-button"
-            :disabled="currentPage === totalPages"
-            @click="goToPage(totalPages)"
-          >
+          <button type="button" class="page-button" :disabled="currentPage === totalPages" @click="goToPage(totalPages)">
             »»
           </button>
         </div>
       </section>
+    </section>
 
-      <section class="board-detail" v-else>
-        <div class="detail-toolbar">
-          <button type="button" class="secondary-button" @click="clearSelection">목록으로</button>
-        </div>
-
+    <section class="board-content" v-else-if="selectedBoard && !isCreating && !isEditing">
+      <section class="board-detail">
         <div class="detail-card">
           <div class="detail-heading">
             <div class="detail-title-wrap">
@@ -107,56 +94,43 @@
           </div>
 
           <div class="detail-actions">
-            <button class="secondary-button" @click="openEditModal">수정</button>
-            <button class="danger-button" @click="openDeleteModal">삭제</button>
+            <button class="secondary-button" type="button" @click="startEdit">수정</button>
+            <button class="danger-button" type="button" @click="confirmDelete">삭제</button>
           </div>
         </div>
       </section>
     </section>
 
-    <div class="modal-backdrop" v-if="modalOpen" @click.self="closeModal">
-      <div class="modal-panel">
-        <h3>{{ modalTitle }}</h3>
-        <form @submit.prevent="submitForm" class="modal-form">
-          <label>
-            제목
-            <input v-model="form.title" type="text" required maxlength="100" />
+    <section class="board-content" v-else>
+      <form class="board-form-page" @submit.prevent="submitForm">
+        <div class="form-header">
+          <h2>{{ isCreating ? '글쓰기' : '수정' }}</h2>
+          <button class="secondary-button" type="button" @click="cancelForm">취소 · 목록으로</button>
+        </div>
+
+        <div class="editor-card">
+          <label class="form-field">
+            <span>제목</span>
+            <input v-model="form.title" type="text" required maxlength="100" class="form-input" />
           </label>
 
-          <label>
-            내용
-            <textarea v-model="form.content" rows="6" required maxlength="1000"></textarea>
+          <label class="form-field">
+            <span>내용</span>
+            <textarea v-model="form.content" rows="12" required maxlength="1000" class="form-textarea"></textarea>
           </label>
 
-          <label>
-            비밀번호
-            <input v-model="form.password" type="password" required maxlength="20" />
+          <label class="form-field">
+            <span>비밀번호</span>
+            <input v-model="form.password" type="password" required maxlength="20" class="form-input" />
           </label>
 
-          <div class="modal-actions">
-            <button type="button" class="secondary-button" @click="closeModal">취소</button>
-            <button type="submit" class="primary-button">저장</button>
+          <div class="form-actions">
+            <button class="secondary-button" type="button" @click="cancelForm">취소</button>
+            <button class="primary-button" type="submit">저장</button>
           </div>
-        </form>
-      </div>
-    </div>
-
-    <div class="modal-backdrop" v-if="deleteModalOpen" @click.self="closeDeleteModal">
-      <div class="modal-panel small">
-        <h3>삭제 확인</h3>
-        <p>삭제하려면 비밀번호를 입력하세요.</p>
-        <form @submit.prevent="confirmDelete" class="modal-form">
-          <label>
-            비밀번호
-            <input v-model="deletePassword" type="password" required maxlength="20" />
-          </label>
-          <div class="modal-actions">
-            <button type="button" class="secondary-button" @click="closeDeleteModal">취소</button>
-            <button type="submit" class="danger-button">삭제</button>
-          </div>
-        </form>
-      </div>
-    </div>
+        </div>
+      </form>
+    </section>
   </div>
 </template>
 
@@ -171,11 +145,9 @@ import {
 
 const searchTerm = ref('')
 const selectedId = ref(null)
-const modalOpen = ref(false)
-const deleteModalOpen = ref(false)
-const modalMode = ref('create')
+const isCreating = ref(false)
+const isEditing = ref(false)
 const form = ref({ title: '', content: '', password: '' })
-const deletePassword = ref('')
 const boards = ref(listBoards())
 const pageSize = 5
 const currentPage = ref(1)
@@ -193,9 +165,7 @@ const filteredBoards = computed(() => {
       })
     : items
 
-  return filtered
-    .slice()
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+  return filtered.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 })
 
 const totalPages = computed(() => Math.max(1, Math.ceil(filteredBoards.value.length / pageSize)))
@@ -216,10 +186,6 @@ const pageNumbers = computed(() => {
 const selectedBoard = computed(() => {
   return boards.value.find((item) => item.id === selectedId.value) || null
 })
-
-const modalTitle = computed(() =>
-  modalMode.value === 'create' ? '게시글 작성' : '게시글 수정'
-)
 
 watch(searchTerm, () => {
   currentPage.value = 1
@@ -246,59 +212,56 @@ function refreshBoards() {
 
 function selectBoard(id) {
   selectedId.value = id
+  isCreating.value = false
+  isEditing.value = false
 }
 
 function clearSelection() {
   selectedId.value = null
+  isCreating.value = false
+  isEditing.value = false
 }
 
-function openCreateModal() {
-  modalMode.value = 'create'
+function startCreate() {
+  selectedId.value = null
+  isCreating.value = true
+  isEditing.value = false
   form.value = { title: '', content: '', password: '' }
-  modalOpen.value = true
 }
 
-function openEditModal() {
+function startEdit() {
   if (!selectedBoard.value) return
 
-  modalMode.value = 'edit'
+  isCreating.value = false
+  isEditing.value = true
   form.value = {
     title: selectedBoard.value.title,
     content: selectedBoard.value.content,
     password: ''
   }
-  modalOpen.value = true
 }
 
-function closeModal() {
-  modalOpen.value = false
+function cancelForm() {
+  selectedId.value = null
+  isCreating.value = false
+  isEditing.value = false
   form.value = { title: '', content: '', password: '' }
 }
 
-function openDeleteModal() {
-  deletePassword.value = ''
-  deleteModalOpen.value = true
-}
-
-function closeDeleteModal() {
-  deleteModalOpen.value = false
-  deletePassword.value = ''
-}
-
 function submitForm() {
-  if (modalMode.value === 'create') {
+  if (isCreating.value) {
     createBoard({
       title: form.value.title,
       content: form.value.content,
       password: form.value.password
     })
-    closeModal()
+    cancelForm()
     refreshBoards()
     return
   }
 
   if (!selectedBoard.value) {
-    closeModal()
+    cancelForm()
     return
   }
 
@@ -316,24 +279,25 @@ function submitForm() {
     return
   }
 
-  closeModal()
+  cancelForm()
   refreshBoards()
 }
 
 function confirmDelete() {
-  if (!selectedBoard.value) {
-    closeDeleteModal()
-    return
-  }
+  if (!selectedBoard.value) return
 
-  const removed = deleteBoard(selectedBoard.value.id, deletePassword.value)
+  const password = prompt('삭제하려면 비밀번호를 입력하세요.')
+  if (!password) return
+
+  const removed = deleteBoard(selectedBoard.value.id, password)
   if (!removed) {
     alert('비밀번호가 일치하지 않습니다.')
     return
   }
 
-  closeDeleteModal()
   selectedId.value = null
+  isCreating.value = false
+  isEditing.value = false
   refreshBoards()
 }
 </script>
@@ -494,12 +458,6 @@ function confirmDelete() {
   flex-wrap: wrap;
 }
 
-.detail-toolbar {
-  display: flex;
-  justify-content: flex-start;
-  margin-bottom: 14px;
-}
-
 .detail-card {
   display: grid;
   gap: 16px;
@@ -574,7 +532,7 @@ function confirmDelete() {
 }
 
 .detail-actions,
-.modal-actions {
+.form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
@@ -608,50 +566,60 @@ function confirmDelete() {
   border-color: var(--point);
 }
 
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(36, 64, 36, 0.22);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 40;
-  padding: 18px;
+.board-form-page {
+  width: 100%;
+  display: grid;
+  gap: 16px;
+  padding: 20px 0;
 }
 
-.modal-panel {
-  width: min(560px, 100%);
-  background: var(--bg);
-  border: 1px solid var(--border);
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.form-header h2 {
+  margin: 0;
+  color: var(--text-h);
+  font-family: var(--heading);
+  font-size: 1.3rem;
+}
+
+.editor-card {
+  width: 100%;
+  display: grid;
+  gap: 16px;
   padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
   box-shadow: var(--shadow);
 }
 
-.modal-panel.small {
-  width: min(420px, 100%);
-}
-
-.modal-form {
-  display: grid;
-  gap: 14px;
-}
-
-.modal-form label {
+.form-field {
   display: grid;
   gap: 8px;
-  font-size: 14px;
   color: var(--text);
+  font-size: 0.95rem;
 }
 
-.modal-form input,
-.modal-form textarea {
+.form-input,
+.form-textarea {
   width: 100%;
   border: 1px solid var(--border);
+  border-radius: 6px;
   padding: 10px 12px;
-  font-size: 14px;
-  background: var(--surface);
+  background: var(--bg);
   color: var(--text);
   font-family: var(--sans);
+  box-sizing: border-box;
+}
+
+.form-textarea {
+  min-height: 400px;
+  resize: vertical;
 }
 
 .empty-state {
@@ -678,6 +646,11 @@ function confirmDelete() {
 
   .search-input {
     min-width: 0;
+  }
+
+  .form-header {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 </style>
