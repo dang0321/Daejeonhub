@@ -58,8 +58,8 @@
       </div>
     </header>
 
-    <!-- 1. 목록 화면 -->
-    <section class="board-content" v-if="!selectedBoard && !isCreating && !isEditing">
+    <!-- 1. 목록 화면 (넓은 레이아웃 사용) -->
+    <section class="board-content list-layout" v-if="!selectedBoard && !isCreating && !isEditing">
       <section class="board-list-wrapper">
         <div v-if="filteredBoards.length === 0" class="empty-state">
           등록된 게시글이 없습니다.
@@ -67,6 +67,7 @@
 
         <div v-else class="board-table-container">
           <div class="board-table-header">
+            <span class="col-seq">번호</span>
             <span class="col-category">분류</span>
             <span class="col-title">제목</span>
             <span class="col-author">작성자</span>
@@ -82,6 +83,9 @@
               :class="{ active: selectedBoard && selectedBoard.id === board.id }"
               @click="selectBoard(board.id)"
             >
+              <div class="col-seq">
+                <span class="board-item-seq">{{ board.seq }}</span>
+              </div>
               <div class="col-category">
                 <span class="board-list-category" :class="getCategoryClass(board.category)">
                   {{ board.category }}
@@ -97,12 +101,12 @@
                 <span class="board-item-meta">{{ formatDate(board.createdAt) }}</span>
               </div>
               <div class="col-stats-like">
-                <span class="stat-number" :class="{ 'has-likes': board.likes > 0 }">
+                <span class="stat-number">
                   {{ board.likes || 0 }}
                 </span>
               </div>
               <div class="col-stats-view">
-                <span class="stat-number view-number">
+                <span class="stat-number">
                   {{ board.views || 0 }}
                 </span>
               </div>
@@ -140,8 +144,8 @@
       </section>
     </section>
 
-    <!-- 2. 상세보기 화면 -->
-    <section class="board-content" v-else-if="selectedBoard && !isCreating && !isEditing">
+    <!-- 2. 상세보기 화면 (중앙으로 모인 컴팩트 레이아웃) -->
+    <section class="board-content detail-layout" v-else-if="selectedBoard && !isCreating && !isEditing">
       <section class="board-detail">
         <div class="detail-card">
           <div class="detail-heading">
@@ -149,7 +153,10 @@
               <span class="board-list-category detail-badge" :class="getCategoryClass(selectedBoard.category)">
                 {{ selectedBoard.category }}
               </span>
-              <h3 class="detail-title-text">{{ selectedBoard.title }}</h3>
+              <h3 class="detail-title-text">
+                <span class="detail-title-seq">#{{ selectedBoard.seq }}</span>
+                {{ selectedBoard.title }}
+              </h3>
             </div>
             
             <div class="detail-meta-wrap">
@@ -195,8 +202,8 @@
       </section>
     </section>
 
-    <!-- 3. 상세조회 디자인과 100% 동일하게 일치시킨 글쓰기/수정 화면 -->
-    <section class="board-content" v-else>
+    <!-- 3. 상세조회 디자인과 100% 동일하게 일치시킨 글쓰기/수정 화면 (중앙으로 모인 컴팩트 레이아웃) -->
+    <section class="board-content detail-layout" v-else>
       <form class="board-detail" @submit.prevent="submitForm">
         <div class="detail-card">
           <div class="detail-heading">
@@ -257,7 +264,7 @@
           <div class="detail-body">
             <textarea 
               v-model="form.content" 
-              rows="12" 
+              rows="15" 
               required 
               maxlength="1000" 
               placeholder="내용을 입력하세요"
@@ -303,7 +310,7 @@ const form = ref({
 })
 
 const boards = ref(listBoards())
-const pageSize = 5
+const pageSize = 10 
 const currentPage = ref(1)
 
 const userLikedPostIds = ref([])
@@ -337,21 +344,19 @@ const isCurrentPostLiked = computed(() => {
 const filteredBoards = computed(() => {
   const normalized = searchTerm.value.trim().toLowerCase()
 
-  return boards.value
-    .filter((item) => {
-      const searchMatched =
-        !normalized ||
-        item.title.toLowerCase().includes(normalized) ||
-        item.content.toLowerCase().includes(normalized) ||
-        item.nickname.toLowerCase().includes(normalized)
+  return boards.value.filter((item) => {
+    const searchMatched =
+      !normalized ||
+      item.title.toLowerCase().includes(normalized) ||
+      item.content.toLowerCase().includes(normalized) ||
+      item.nickname.toLowerCase().includes(normalized)
 
-      const categoryMatched =
-        selectedCategory.value === '전체' ||
-        item.category === selectedCategory.value
+    const categoryMatched =
+      selectedCategory.value === '전체' ||
+      item.category === selectedCategory.value
 
-      return searchMatched && categoryMatched
-    })
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    return searchMatched && categoryMatched
+  })
 })
 
 const totalPages = computed(() => Math.max(1, Math.ceil(filteredBoards.value.length / pageSize)))
@@ -589,17 +594,14 @@ function handleLikeToggle() {
   max-width: none;
   margin: 0;
   padding: 24px 28px 40px;
-  min-height: 100vh; /* 화면의 최소 전체 높이를 지정하여 상하 덜컹거림 방지 */
-  scrollbar-gutter: stable; /* 스크롤바 유무에 상관없이 우측 레이아웃 공간을 유지하여 좌우 덜컹거림 원천 방지 */
+  min-height: 100vh;
+  scrollbar-gutter: stable;
   background: var(--bg);
   color: var(--text);
   font-family: var(--sans);
 }
 
-/* 
-  헤더 영역: 2단 구조
-  모든 화면에서 일정한 세로 공간을 점유하여 화면이 이동할 때 '게시판' 타이틀이 흔들리지 않습니다.
-*/
+/* 헤더 영역 */
 .board-header {
   display: flex;
   flex-direction: column;
@@ -609,7 +611,6 @@ function handleLikeToggle() {
   border-bottom: 1px solid var(--border);
 }
 
-/* 1층: '게시판' 타이틀과 우측 글쓰기/목록으로 버튼 */
 .header-first-row {
   display: flex;
   justify-content: space-between;
@@ -631,19 +632,17 @@ function handleLikeToggle() {
   flex-shrink: 0;
 }
 
-/* 2층: 카테고리 탭과 검색 상자 (1층 밑에 나란히 배치) */
 .header-second-row {
   display: flex;
   align-items: center;
   gap: 16px;
   width: 100%;
-  height: 38px; /* 고정 높이 부여 */
+  height: 38px;
   opacity: 1;
   visibility: visible;
   transition: opacity 0.15s ease, visibility 0.15s ease;
 }
 
-/* 상세페이지, 수정/글쓰기 페이지에서도 높이(38px)는 그대로 차지하게 하여 상하 덜컹거림 해결 */
 .header-second-row.hide-layout {
   opacity: 0;
   visibility: hidden;
@@ -722,6 +721,7 @@ function handleLikeToggle() {
   font-weight: 600;
 }
 
+/* 레이아웃 래퍼 */
 .board-content {
   display: flex;
   justify-content: center;
@@ -730,15 +730,22 @@ function handleLikeToggle() {
   gap: 24px;
 }
 
-/* --- 목록 조회 및 상세정보 최소 높이 표준화 --- */
+.board-content.list-layout {
+  max-width: 100%;
+}
+
+.board-content.detail-layout {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
 .board-list-wrapper,
 .board-detail {
   width: 100%;
-  max-width: none;
   background: transparent;
   border: none;
-  padding: 20px 0;
-  min-height: 550px; /* 전체 컨텐츠 카드의 최소 높이를 일관되게 고정 */
+  padding: 10px 0;
+  min-height: auto;
 }
 
 .board-table-container {
@@ -751,7 +758,7 @@ function handleLikeToggle() {
 .board-table-header,
 .board-list li {
   display: grid;
-  grid-template-columns: 80px 1fr 110px 100px 80px 80px;
+  grid-template-columns: 60px 80px 1fr 110px 100px 80px 80px;
   align-items: center;
   gap: 16px;
 }
@@ -766,29 +773,12 @@ function handleLikeToggle() {
   opacity: 0.8;
 }
 
-.col-category {
-  text-align: center;
-}
-
-.col-title {
-  text-align: left;
-  min-width: 0;
-  padding-left: 8px; 
-}
-
-.col-author {
-  text-align: left;
-  padding-left: 4px;
-}
-
-.col-date {
-  text-align: center;
-}
-
-.col-stats-like,
-.col-stats-view {
-  text-align: center;
-}
+.col-seq { text-align: center; }
+.col-category { text-align: center; }
+.col-title { text-align: left; min-width: 0; padding-left: 8px; }
+.col-author { text-align: left; padding-left: 4px; }
+.col-date { text-align: center; }
+.col-stats-like, .col-stats-view { text-align: center; }
 
 .board-list {
   list-style: none;
@@ -797,7 +787,7 @@ function handleLikeToggle() {
 }
 
 .board-list li {
-  padding: 15px 18px;
+  padding: 14px 18px;
   border-bottom: 1px solid var(--border);
   cursor: pointer;
   transition: background-color 0.15s ease;
@@ -813,6 +803,17 @@ function handleLikeToggle() {
   background: var(--accent-bg);
 }
 
+/* 
+  👇 [수정된 디자인 영역] 
+  카테고리, 제목 제외 모든 텍스트 요소를 투명도 80(0.8)으로 일괄 통일 
+*/
+.board-item-seq {
+  font-size: 0.88rem;
+  color: var(--text);
+  opacity: 0.8; /* 👈 60% -> 80% 변경 */
+  font-family: var(--sans);
+}
+
 .board-item-title {
   font-size: 0.95rem;
   color: var(--text-h);
@@ -824,22 +825,32 @@ function handleLikeToggle() {
   text-overflow: ellipsis;
 }
 
+.board-item-author {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-h);
+  opacity: 0.8; /* 👈 90% -> 80% 변경 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.board-item-meta {
+  color: var(--text);
+  font-size: 0.82rem;
+  white-space: nowrap;
+  opacity: 0.8; /* 👈 55% -> 80% 변경 */
+}
+
 .stat-number {
   font-size: 0.85rem;
   font-weight: 500;
   color: var(--text);
-  opacity: 0.8;
+  opacity: 0.8; /* 👈 모든 통계 수치 투명도 80% 고정 */
 }
 
-.stat-number.has-likes {
-  font-weight: 600;
-  color: var(--text-h);
-}
-
-.stat-number.view-number {
-  opacity: 0.55;
-}
-
+/* 카테고리 뱃지 고유 스타일 */
 .board-list-category {
   display: inline-block;
   padding: 3px 8px;
@@ -871,24 +882,7 @@ function handleLikeToggle() {
   color: #c26410;
 }
 
-.board-item-author {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--text-h);
-  opacity: 0.9;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: block;
-}
-
-.board-item-meta {
-  color: var(--text);
-  font-size: 0.82rem;
-  white-space: nowrap;
-  opacity: 0.55;
-}
-
+/* 페이지네이션 */
 .pagination {
   display: flex;
   justify-content: center;
@@ -926,7 +920,7 @@ function handleLikeToggle() {
   flex-wrap: wrap;
 }
 
-/* --- 상세정보 카드 스타일 --- */
+/* 상세정보 카드 */
 .detail-card {
   display: grid;
   gap: 24px;
@@ -966,6 +960,12 @@ function handleLikeToggle() {
   line-height: 1.35;
   font-family: var(--heading);
   word-break: break-all;
+}
+
+.detail-title-seq {
+  color: var(--sub);
+  margin-right: 4px;
+  font-weight: 500;
 }
 
 .detail-meta-wrap {
@@ -1016,7 +1016,7 @@ function handleLikeToggle() {
 }
 
 .detail-content {
-  min-height: 260px;
+  min-height: 200px;
   white-space: pre-wrap;
   line-height: 1.85;
   letter-spacing: 0.01em;
@@ -1104,7 +1104,7 @@ function handleLikeToggle() {
   border-color: var(--point);
 }
 
-/* --- 글쓰기/수정용 커스텀 디자인 --- */
+/* 글쓰기/수정 폼 */
 .editor-category-badge {
   position: relative;
   overflow: hidden;
@@ -1195,6 +1195,7 @@ function handleLikeToggle() {
   text-align: center;
 }
 
+/* 반응형 스타일 */
 @media (max-width: 900px) {
   .board-table-header {
     display: none;
@@ -1208,6 +1209,7 @@ function handleLikeToggle() {
     padding: 16px;
   }
 
+  .col-seq,
   .col-category, 
   .col-title, 
   .col-author, 
@@ -1219,22 +1221,28 @@ function handleLikeToggle() {
     padding: 0;
   }
 
+  .col-seq::before {
+    content: "글번호 ";
+    font-size: 0.8rem;
+    opacity: 0.8;
+  }
+
   .col-stats-like::before {
     content: "좋아요 ";
     font-size: 0.8rem;
-    opacity: 0.6;
+    opacity: 0.8;
   }
   
   .col-stats-view::before {
     content: "조회수 ";
     font-size: 0.8rem;
-    opacity: 0.6;
+    opacity: 0.8;
   }
 
   .col-date {
     display: flex;
     justify-content: flex-start;
-    opacity: 0.6;
+    opacity: 0.8;
     font-size: 0.8rem;
   }
 
@@ -1248,7 +1256,6 @@ function handleLikeToggle() {
     align-items: stretch;
   }
 
-  /* 반응형 모바일 헤더 대응 */
   .board-header {
     flex-direction: column;
     gap: 12px;
@@ -1258,7 +1265,6 @@ function handleLikeToggle() {
     width: 100%;
   }
 
-  /* 모바일 화면에서는 불필요한 고정 높이를 해제하여 유연하게 대응 */
   .header-second-row {
     flex-direction: column;
     align-items: stretch;

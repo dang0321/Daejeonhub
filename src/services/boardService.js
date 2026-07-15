@@ -37,32 +37,49 @@ function formatBoardItem(item) {
     password: item.password || '',
     createdAt: item.createdAt || new Date().toISOString(),
     likes: Number(item.likes) || 0,
-    views: Number(item.views) || 0 // 👈 [추가] 조회수 기본값 세팅
+    views: Number(item.views) || 0
   }
 }
 
+/**
+ * 게시글 목록 조회 (가상 번호 매핑 추가)
+ */
 export function listBoards(searchTerm = '') {
+  // 1. 전체 데이터를 불러와 포맷팅합니다.
   const boards = loadBoards().map(formatBoardItem)
 
-  const normalized = searchTerm.trim().toLowerCase()
+  // 2. 오래된 순(생성일 기준)으로 정렬하여 DB의 행 번호(1번부터 시작)처럼 기준을 잡습니다.
+  //    (만약 생성일이 같다면 순서가 바뀔 수 있으므로 slice() 상태 그대로 사용하거나 오름차순 정렬)
+  const sortedByOldest = boards.slice().sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+  
+  // 3. 모든 글에 생성일 기준의 고유한 가상 번호(seq)를 부여합니다.
+  const boardsWithSeq = sortedByOldest.map((item, index) => ({
+    ...item,
+    seq: index + 1 // 1부터 시작하는 순차적인 번호
+  }))
 
+  // 4. 검색어 필터링을 진행합니다.
+  const normalized = searchTerm.trim().toLowerCase()
   const filtered = normalized
-    ? boards.filter((item) => {
+    ? boardsWithSeq.filter((item) => {
         return (
           item.title.toLowerCase().includes(normalized) ||
           item.content.toLowerCase().includes(normalized) ||
           item.nickname.toLowerCase().includes(normalized)
         )
       })
-    : boards
+    : boardsWithSeq
 
-  return filtered
-    .slice()
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+  // 5. 최종 사용자에게 보여줄 때는 최신글이 위로 오도록 내림차순 정렬하여 반환합니다.
+  return filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 }
 
+/**
+ * 단일 게시글 상세 조회 (가상 번호 추가)
+ */
 export function getBoard(id) {
-  const boards = loadBoards().map(formatBoardItem)
+  // 상세 페이지나 다른 곳에서도 번호가 필요할 수 있으므로 listBoards의 로직을 활용합니다.
+  const boards = listBoards() 
   return boards.find((item) => item.id === id) || null
 }
 
@@ -84,7 +101,7 @@ export function createBoard({
     password: password.trim(),
     createdAt: new Date().toISOString(),
     likes: 0,
-    views: 0 // 👈 [추가] 신규 생성 시 조회수 0으로 설정
+    views: 0
   })
 
   boards.push(newBoard)
@@ -148,7 +165,6 @@ export function deleteBoard(id, password) {
   return true
 }
 
-// 👈 [추가] 조회수 증가 처리 로직
 export function incrementViews(id) {
   const boards = loadBoards()
   const index = boards.findIndex((item) => item.id === id)
