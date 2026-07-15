@@ -51,14 +51,24 @@ const goBack = () => {
       <button class="back-btn" type="button" @click="goBack">← 홈으로 돌아가기</button>
 
       <section class="region-card">
-        <p class="badge">대전 권역 소개</p>
-        <h1>{{ currentRegion.name }}</h1>
-        <h2>{{ currentRegion.title }}</h2>
-        <p class="description">{{ currentRegion.description }}</p>
+        <div class="photo-frame">
+          <div class="photo-content">
+            <p class="badge">대전 권역 소개</p>
+            <h1>{{ currentRegion.name }}</h1>
+            <h2>{{ currentRegion.title }}</h2>
+            <p class="summary">{{ currentRegion.description }}</p>
+          </div>
+        </div>
 
-        <ul>
-          <li v-for="item in currentRegion.highlights" :key="item">{{ item }}</li>
-        </ul>
+        <div class="detail-box">
+          <h3>지역 특징</h3>
+          <p class="description">
+            {{ currentRegion.description }}
+          </p>
+          <ul>
+            <li v-for="item in currentRegion.highlights" :key="item">{{ item }}</li>
+          </ul>
+        </div>
       </section>
     </div>
   </div>
@@ -66,69 +76,150 @@ const goBack = () => {
 
 <style scoped>
 .region-view {
-  min-height: 70vh;
-  background: linear-gradient(135deg, var(--main) 0%, #f7fcf7 100%);
-  padding: 60px 20px;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #edf8eb 0%, #f8fcf7 100%);
+  padding: 64px 20px;
 }
 
 .container {
-  max-width: 800px;
+  width: 100%;
+  max-width: 860px;
   margin: 0 auto;
 }
 
 .back-btn {
   border: none;
-  background: var(--sub);
+  background: linear-gradient(135deg, #4f8b4b, #76b96d);
   color: white;
   padding: 10px 16px;
   border-radius: 999px;
   cursor: pointer;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
+  box-shadow: 0 8px 18px rgba(79, 139, 75, 0.18);
 }
 
 .region-card {
-  background: white;
+  background: #fffdf8;
+  border-radius: 28px;
+  padding: 32px;
+  box-shadow: 0 20px 44px rgba(45, 92, 47, 0.12);
+  border: 1px solid rgba(111, 169, 104, 0.16);
+  animation: cardEnter 0.8s ease-out both;
+}
+
+.photo-frame {
+  background: linear-gradient(145deg, #fbfff8, #eef7e8);
+  border: 1px solid rgba(111, 169, 104, 0.22);
+  border-radius: 24px;
+  padding: 20px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 12px 28px rgba(57, 108, 64, 0.08);
+  margin-bottom: 24px;
+}
+
+.photo-content {
+  background: #ffffff;
   border-radius: 20px;
-  padding: 40px;
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border);
+  padding: 24px 24px 28px;
+  box-shadow: 0 10px 24px rgba(57, 108, 64, 0.08);
+  text-align: center;
 }
 
 .badge {
   display: inline-block;
-  background: var(--main);
-  color: var(--sub);
+  background: #eaf7e5;
+  color: #35663e;
   padding: 6px 12px;
   border-radius: 999px;
   font-size: 13px;
   margin-bottom: 12px;
+  font-weight: 600;
 }
 
 h1 {
   font-size: 32px;
-  margin-bottom: 8px;
-  color: var(--sub);
+  margin: 0 0 8px;
+  color: #2f5f3b;
 }
 
 h2 {
   font-size: 22px;
-  color: var(--sub);
-  margin-bottom: 16px;
+  color: #4f784f;
+  margin: 0 0 14px;
+}
+
+.summary {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #617d64;
+  margin: 0 auto;
+  max-width: 560px;
+}
+
+.detail-box {
+  background: #f9fdf8;
+  border-radius: 20px;
+  padding: 22px 24px;
+  border: 1px solid rgba(111, 169, 104, 0.16);
+}
+
+.detail-box h3 {
+  font-size: 18px;
+  color: #2f5f3b;
+  margin: 0 0 10px;
 }
 
 .description {
   font-size: 16px;
   line-height: 1.7;
   color: #516952;
-  margin-bottom: 16px;
+  margin: 0 0 16px;
 }
 
 ul {
   padding-left: 20px;
   color: #425a43;
+  margin: 0;
 }
 
 li {
   margin-bottom: 8px;
+  line-height: 1.6;
+}
+
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 768px) {
+  .region-view {
+    padding: 48px 16px;
+  }
+
+  .region-card {
+    padding: 22px;
+  }
+
+  .photo-frame {
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+
+  .photo-content {
+    padding: 20px 18px 22px;
+  }
+
+  .detail-box {
+    padding: 18px 20px;
+  }
 }
 </style>

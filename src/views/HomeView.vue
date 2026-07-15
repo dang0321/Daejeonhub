@@ -143,10 +143,10 @@ const goToService = (routeName) => {
 
 .hero {
   position: relative;
-  padding: 112px 24px 134px;
+  padding: 112px 24px 150px;
   text-align: center;
   color: #163720;
-  background: #78b96d;
+  background: linear-gradient(135deg, #eaf8e7 0%, #cfecc0 45%, #9ed28a 100%);
   overflow: hidden;
 }
 
@@ -154,16 +154,32 @@ const goToService = (routeName) => {
   content: '';
   position: absolute;
   inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 100%);
   pointer-events: none;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  left: -5%;
+  right: -5%;
+  bottom: -2px;
+  height: 90px;
+  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.82) 100%);
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  transform: translateY(40px);
 }
 
 .hero-content {
   position: relative;
+  z-index: 1;
   max-width: 760px;
   margin: 0 auto;
   padding: 50px;
   border-radius: 30px;
   background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 18px 42px rgba(84, 122, 76, 0.16);
   animation: fadeUp 0.8s ease both;
 }
 
