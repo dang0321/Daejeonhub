@@ -20,7 +20,7 @@ const getMarkerImage = (color, active = false) => {
   const key = `${color}-${active}`
   if (markerImageCache[key]) return markerImageCache[key]
 
-  const size = active ? 32 : 18
+  const size = active ? 24 : 14
   const h = active ? 44 : 25
   const stroke = active ? '<path d="M14 0C6.3 0 0 6.3 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.3 21.7 0 14 0z" fill="none" stroke="#ffb300" stroke-width="3"/>' : ''
   const svg = `
@@ -93,6 +93,7 @@ const focusPlace = (place) => {
 
   selectedId.value = place.contentid
   map.value.panTo(new kakaoMapInstance.LatLng(lat, lng))
+  map.value.setLevel(5)
 
   // 새로 선택한 핀을 강조 이미지로 교체
   const target = markers.find((m) => m.id === place.contentid)
@@ -101,6 +102,17 @@ const focusPlace = (place) => {
     target.marker.setZIndex(100)   // 겹칠 때 위로 올림
     selectedMarker = target
   }
+}
+
+const zoomIn = () => {
+  if (!map.value) return
+  const level = map.value.getLevel()
+  if (level > 1) map.value.setLevel(level - 1)
+}
+const zoomOut = () => {
+  if (!map.value) return
+  const level = map.value.getLevel()
+  if (level < 14) map.value.setLevel(level + 1)
 }
 
 const loadPlaces = async () => {
@@ -168,6 +180,10 @@ onBeforeUnmount(clearMarkers)
     <div class="map-card">
       <div class="map-area">
         <div ref="mapContainer" class="map-container"></div>
+        <div class="zoom-controls">
+          <button @click="zoomIn">＋</button>
+          <button @click="zoomOut">－</button>
+        </div>
         <div v-if="loading" class="map-overlay">지도 데이터를 불러오는 중입니다...</div>
         <div v-else-if="errorMessage" class="map-overlay error">{{ errorMessage }}</div>
       </div>
@@ -265,6 +281,21 @@ onBeforeUnmount(clearMarkers)
 .map-area {
   position: relative;
 }
+
+.zoom-controls {
+  position: absolute;
+  top: 12px; right: 12px;
+  display: flex; flex-direction: column; gap: 4px;
+  z-index: 10;
+}
+.zoom-controls button {
+  width: 36px; height: 36px;
+  border: 1px solid #d1d5db; background: #fff;
+  border-radius: 8px; cursor: pointer;
+  font-size: 18px; font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+.zoom-controls button:hover { background: #f3f4f6; }
 
 .map-container {
   width: 100%;
