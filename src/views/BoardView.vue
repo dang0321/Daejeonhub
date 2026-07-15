@@ -24,9 +24,9 @@
           등록된 게시글이 없습니다.
         </div>
 
-        <ul class="board-list">
+        <ul v-else class="board-list">
           <li
-            v-for="board in filteredBoards"
+            v-for="board in pagedBoards"
             :key="board.id"
             :class="{ active: selectedBoard && selectedBoard.id === board.id }"
             @click="selectBoard(board.id)"
@@ -38,6 +38,28 @@
             <span class="board-item-meta">{{ formatDate(board.createdAt) }}</span>
           </li>
         </ul>
+
+        <div v-if="filteredBoards.length > 0" class="pagination">
+          <button
+            type="button"
+            class="page-button"
+            :disabled="currentPage === 1"
+            @click="currentPage -= 1"
+          >
+            이전
+          </button>
+
+          <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
+
+          <button
+            type="button"
+            class="page-button"
+            :disabled="currentPage === totalPages"
+            @click="currentPage += 1"
+          >
+            다음
+          </button>
+        </div>
       </section>
 
       <section class="board-detail" v-else>
@@ -129,6 +151,8 @@ const modalMode = ref('create')
 const form = ref({ title: '', content: '', password: '' })
 const deletePassword = ref('')
 const boards = ref(listBoards())
+const pageSize = 5
+const currentPage = ref(1)
 
 const filteredBoards = computed(() => {
   const normalized = searchTerm.value.trim().toLowerCase()
@@ -146,6 +170,13 @@ const filteredBoards = computed(() => {
   return filtered
     .slice()
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+})
+
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredBoards.value.length / pageSize)))
+
+const pagedBoards = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  return filteredBoards.value.slice(start, start + pageSize)
 })
 
 const selectedBoard = computed(() => {
@@ -393,6 +424,36 @@ function confirmDelete() {
   font-size: 0.8rem;
   white-space: nowrap;
   margin-top: 2px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.page-button {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #111827;
+  cursor: pointer;
+}
+
+.page-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-info {
+  color: #4b5563;
+  font-size: 0.92rem;
+  font-weight: 600;
 }
 
 .detail-toolbar {
