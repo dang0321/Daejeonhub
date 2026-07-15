@@ -25,7 +25,7 @@ const services = [
     routeName: 'Map'
   },
   {
-    icon: '💬',
+    icon: '🤖',
     title: '챗봇',
     description: '24시간 대전 정보 상담 서비스',
     routeName: 'Chat'

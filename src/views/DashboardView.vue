@@ -41,7 +41,7 @@ onMounted(async () => {
     <div class="page-header">
       <div>
         <p class="eyebrow">Tourism Analytics</p>
-        <h1>대전·충청권 관광 데이터 대시보드</h1>
+        <h1>대전 관광 데이터 대시보드</h1>
       </div>
       <button class="refresh-btn">실시간 업데이트</button>
     </div>
