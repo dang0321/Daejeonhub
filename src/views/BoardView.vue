@@ -343,10 +343,10 @@ function confirmDelete() {
 
 <style scoped>
 .board-page {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 24px;
-  background: linear-gradient(180deg, #f8fbff 0%, #f4f7fb 100%);
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 24px 28px 40px;
   min-height: 100%;
 }
 
@@ -356,55 +356,52 @@ function confirmDelete() {
   align-items: center;
   margin-bottom: 18px;
   gap: 12px;
-  padding: 20px 24px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+  padding: 18px 0 20px;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .board-header h1 {
   margin: 0;
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   color: #111827;
 }
 
 .board-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .search-input {
   min-width: 260px;
-  padding: 10px 12px;
-  border: 1px solid #d0d7de;
-  border-radius: 10px;
-  background: #f9fafb;
+  padding: 9px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
 }
 
 .board-content {
   display: flex;
   justify-content: center;
   align-items: start;
+  width: 100%;
 }
 
 .board-list-wrapper,
 .board-detail {
-  width: min(760px, 100%);
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.05);
+  width: 100%;
+  max-width: none;
+  background: transparent;
+  border: none;
+  padding: 20px 0;
   min-height: 420px;
 }
 
 .panel-header {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-bottom: 16px;
+  gap: 4px;
+  margin-bottom: 14px;
 }
 
 .panel-subtitle {
@@ -426,11 +423,9 @@ function confirmDelete() {
   justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
-  padding: 12px 12px;
-  border-radius: 12px;
-  border: 1px solid transparent;
+  padding: 12px 0;
+  border-bottom: 1px solid #f3f4f6;
   cursor: pointer;
-  transition: all 0.2s ease;
 }
 
 .board-list li:last-child {
@@ -439,9 +434,7 @@ function confirmDelete() {
 
 .board-list li:hover,
 .board-list li.active {
-  background: #eef4ff;
-  border-color: #dbeafe;
-  transform: translateY(-1px);
+  background: #f9fafb;
 }
 
 .board-item-main {
@@ -476,7 +469,7 @@ function confirmDelete() {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   margin-top: 16px;
   padding-top: 14px;
   border-top: 1px solid #f3f4f6;
@@ -485,9 +478,8 @@ function confirmDelete() {
 
 .page-button,
 .page-number {
-  padding: 8px 12px;
+  padding: 8px 10px;
   border: 1px solid #d1d5db;
-  border-radius: 8px;
   background: #fff;
   color: #111827;
   cursor: pointer;
@@ -499,21 +491,14 @@ function confirmDelete() {
 }
 
 .page-number.active {
-  background: #2563eb;
-  color: white;
-  border-color: #2563eb;
+  background: #f3f4f6;
+  border-color: #cbd5e1;
 }
 
 .page-number-group {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
-}
-
-.page-info {
-  color: #4b5563;
-  font-size: 0.92rem;
-  font-weight: 600;
 }
 
 .detail-toolbar {
@@ -541,13 +526,13 @@ function confirmDelete() {
   font-size: 0.76rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: #2563eb;
+  color: #4b5563;
   text-transform: uppercase;
 }
 
 .detail-heading h3 {
   margin: 0;
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   color: #111827;
 }
 
@@ -558,15 +543,13 @@ function confirmDelete() {
 }
 
 .detail-body {
-  background: #f8fafc;
-  border: 1px solid #edf2f7;
-  border-radius: 12px;
-  padding: 16px;
+  border-top: 1px solid #f3f4f6;
+  padding-top: 14px;
 }
 
 .detail-content {
   white-space: pre-wrap;
-  line-height: 1.8;
+  line-height: 1.7;
   margin: 0;
   color: #374151;
 }
@@ -575,45 +558,33 @@ function confirmDelete() {
 .modal-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
+  gap: 10px;
 }
 
 .primary-button,
 .secondary-button,
 .danger-button {
-  padding: 10px 16px;
-  border: none;
-  border-radius: 8px;
+  padding: 9px 14px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #111827;
   cursor: pointer;
-  font-weight: 600;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.primary-button {
-  background: #2563eb;
-  color: white;
-}
-
-.primary-button:hover,
-.secondary-button:hover,
-.danger-button:hover {
-  transform: translateY(-1px);
 }
 
 .secondary-button {
-  background: #e5e7eb;
-  color: #111827;
+  background: #f9fafb;
 }
 
 .danger-button {
-  background: #dc2626;
-  color: white;
+  background: #fdf2f2;
+  color: #991b1b;
+  border-color: #fecaca;
 }
 
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.35);
+  background: rgba(17, 24, 39, 0.25);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -624,9 +595,8 @@ function confirmDelete() {
 .modal-panel {
   width: min(560px, 100%);
   background: white;
-  border-radius: 16px;
+  border: 1px solid #e5e7eb;
   padding: 24px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
 }
 
 .modal-panel.small {
@@ -649,7 +619,6 @@ function confirmDelete() {
 .modal-form textarea {
   width: 100%;
   border: 1px solid #d1d5db;
-  border-radius: 10px;
   padding: 10px 12px;
   font-size: 14px;
 }
