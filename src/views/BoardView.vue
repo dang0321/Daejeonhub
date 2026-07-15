@@ -1,69 +1,79 @@
 <template>
   <div class="board-page">
+    <!-- 상단 '게시판' 헤더 영역: 2단 구조로 고정하여 모든 화면에서 완벽한 간격 유지 -->
     <header class="board-header">
-      <div class="header-top">
+      <!-- 1층: 타이틀과 우측 액션 버튼 -->
+      <div class="header-first-row">
         <h1>게시판</h1>
-
-        <!-- 우측 끝 목록 이동 / 취소 버튼 제어 -->
-        <div class="board-actions" v-if="isCreating || isEditing">
-          <button class="secondary-button" type="button" @click="cancelForm">취소 · 목록으로</button>
-        </div>
-        <div class="board-actions" v-else-if="selectedBoard">
-          <button class="secondary-button" type="button" @click="clearSelection">목록으로</button>
+        <div class="header-right">
+          <button 
+            v-if="!selectedBoard && !isCreating && !isEditing" 
+            class="primary-button write-button" 
+            type="button" 
+            @click="startCreate"
+          >
+            글쓰기
+          </button>
+          <button 
+            v-else 
+            class="secondary-button" 
+            type="button" 
+            @click="clearSelection"
+          >
+            목록으로
+          </button>
         </div>
       </div>
 
-      <!-- 목록 보기 화면일 때만 표시되는 헤더 컨트롤 영역 -->
-      <div class="board-actions main-actions" v-if="!selectedBoard && !isCreating && !isEditing">
-        <div class="search-and-category">
-          <!-- 돋보기 아이콘이 들어간 검색 박스 -->
-          <div class="search-box">
-            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <input
-              v-model="searchTerm"
-              type="search"
-              placeholder="제목, 내용 또는 닉네임을 검색하세요"
-              class="search-input"
-            />
-          </div>
-
-          <!-- 카테고리 선택 탭/버튼 메뉴 -->
-          <div class="category-tabs">
-            <button
-              v-for="category in categories"
-              :key="category"
-              type="button"
-              class="category-tab-btn"
-              :class="{ active: selectedCategory === category }"
-              @click="selectedCategory = category"
-            >
-              {{ category }}
-            </button>
-          </div>
+      <!-- 2층: 카테고리와 검색창 (상세/수정/글쓰기 상태에서도 높이와 간격을 유지하여 덜컥거림 완벽 방지) -->
+      <div 
+        class="header-second-row" 
+        :class="{ 'hide-layout': selectedBoard || isCreating || isEditing }"
+      >
+        <div class="category-tabs">
+          <button
+            v-for="category in categories"
+            :key="category"
+            type="button"
+            class="category-tab-btn"
+            :class="{ active: selectedCategory === category }"
+            @click="selectedCategory = category"
+          >
+            {{ category }}
+          </button>
         </div>
 
-        <!-- 우측 끝 글쓰기 버튼 -->
-        <button class="primary-button write-button" type="button" @click="startCreate">글쓰기</button>
+        <div class="search-box">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input
+            v-model="searchTerm"
+            type="search"
+            placeholder="제목, 내용 또는 닉네임을 검색하세요"
+            class="search-input"
+          />
+        </div>
       </div>
     </header>
 
-    <!-- 1. 목록 화면 (건드리지 않은 100점 레이아웃) -->
-    <section class="board-content" v-if="!selectedBoard && !isCreating && !isEditing">
+    <!-- 1. 목록 화면 (넓은 레이아웃 사용) -->
+    <section class="board-content list-layout" v-if="!selectedBoard && !isCreating && !isEditing">
       <section class="board-list-wrapper">
         <div v-if="filteredBoards.length === 0" class="empty-state">
           등록된 게시글이 없습니다.
         </div>
 
         <div v-else class="board-table-container">
-          <!-- 게시판 테이블 헤더 -->
           <div class="board-table-header">
+            <span class="col-seq">번호</span>
             <span class="col-category">분류</span>
             <span class="col-title">제목</span>
             <span class="col-author">작성자</span>
             <span class="col-date">등록일</span>
+            <span class="col-stats-like">좋아요</span>
+            <span class="col-stats-view">조회수</span>
           </div>
 
           <ul class="board-list">
@@ -73,6 +83,9 @@
               :class="{ active: selectedBoard && selectedBoard.id === board.id }"
               @click="selectBoard(board.id)"
             >
+              <div class="col-seq">
+                <span class="board-item-seq">{{ board.seq }}</span>
+              </div>
               <div class="col-category">
                 <span class="board-list-category" :class="getCategoryClass(board.category)">
                   {{ board.category }}
@@ -87,6 +100,16 @@
               <div class="col-date">
                 <span class="board-item-meta">{{ formatDate(board.createdAt) }}</span>
               </div>
+              <div class="col-stats-like">
+                <span class="stat-number">
+                  {{ board.likes || 0 }}
+                </span>
+              </div>
+              <div class="col-stats-view">
+                <span class="stat-number">
+                  {{ board.views || 0 }}
+                </span>
+              </div>
             </li>
           </ul>
         </div>
@@ -96,11 +119,9 @@
           <button type="button" class="page-button" :disabled="currentPage === 1" @click="goToPage(1)">
             ««
           </button>
-
           <button type="button" class="page-button" :disabled="currentPage === 1" @click="currentPage -= 1">
             이전
           </button>
-
           <div class="page-number-group">
             <button
               v-for="page in pageNumbers"
@@ -113,11 +134,9 @@
               {{ page }}
             </button>
           </div>
-
           <button type="button" class="page-button" :disabled="currentPage === totalPages" @click="currentPage += 1">
             다음
           </button>
-
           <button type="button" class="page-button" :disabled="currentPage === totalPages" @click="goToPage(totalPages)">
             »»
           </button>
@@ -125,105 +144,136 @@
       </section>
     </section>
 
-    <!-- 2. 상세보기 화면 (등록일 포맷 복구 + 파이프라인 | 구분선 완벽 원복) -->
-    <section class="board-content" v-else-if="selectedBoard && !isCreating && !isEditing">
+    <!-- 2. 상세보기 화면 (중앙으로 모인 컴팩트 레이아웃) -->
+    <section class="board-content detail-layout" v-else-if="selectedBoard && !isCreating && !isEditing">
       <section class="board-detail">
         <div class="detail-card">
-          <!-- 상단 가로 정렬 헤더 -->
           <div class="detail-heading">
             <div class="detail-title-wrap">
               <span class="board-list-category detail-badge" :class="getCategoryClass(selectedBoard.category)">
                 {{ selectedBoard.category }}
               </span>
-              <h3 class="detail-title-text">{{ selectedBoard.title }}</h3>
+              <h3 class="detail-title-text">
+                <span class="detail-title-seq">#{{ selectedBoard.seq }}</span>
+                {{ selectedBoard.title }}
+              </h3>
             </div>
             
             <div class="detail-meta-wrap">
               <span class="detail-meta-item">
                 <span class="meta-label">작성자</span>
-                <!-- 목록의 .board-item-author 색상 및 투명도와 100% 일치 -->
                 <span class="meta-value-author">{{ selectedBoard.nickname }}</span>
               </span>
-              <!-- 원래 좋아하셨던 깔끔한 세로줄 구분선 복원 -->
+              <span class="detail-meta-divider">|</span>
+              <span class="detail-meta-item">
+                <span class="meta-label">조회수</span>
+                <span class="meta-value-author">{{ selectedBoard.views || 0 }}</span>
+              </span>
               <span class="detail-meta-divider">|</span>
               <span class="detail-meta-item">
                 <span class="meta-label">등록일</span>
-                <!-- 상세 화면만의 본래 등록일 날짜 형식(yyyy-mm-dd hh:min) 완벽 복구 -->
                 <span class="meta-value-date">{{ formatFullDate(selectedBoard.createdAt) }}</span>
               </span>
             </div>
           </div>
 
-          <!-- 본문 내용 -->
           <div class="detail-body">
             <p class="detail-content">{{ selectedBoard.content }}</p>
           </div>
 
+          <!-- 하단 액션바 -->
           <div class="detail-actions">
-            <button class="secondary-button" type="button" @click="startEdit">수정</button>
-            <button class="danger-button" type="button" @click="confirmDelete">삭제</button>
+            <button 
+              type="button" 
+              class="like-button" 
+              :class="{ liked: isCurrentPostLiked }" 
+              @click="handleLikeToggle"
+            >
+              <span class="like-label">좋아요</span>
+              <span class="like-count">{{ selectedBoard.likes || 0 }}</span>
+            </button>
+
+            <div class="right-actions">
+              <button class="secondary-button" type="button" @click="startEdit">수정</button>
+              <button class="danger-button" type="button" @click="confirmDelete">삭제</button>
+            </div>
           </div>
         </div>
       </section>
     </section>
 
-    <!-- 3. 글쓰기 및 수정 화면 -->
-    <section class="board-content" v-else>
-      <form class="board-form-page" @submit.prevent="submitForm">
-        <div class="form-header">
-          <h2>{{ isCreating ? '글쓰기' : '수정' }}</h2>
-          <button class="secondary-button" type="button" @click="cancelForm">취소 · 목록으로</button>
-        </div>
+    <!-- 3. 상세조회 디자인과 100% 동일하게 일치시킨 글쓰기/수정 화면 (중앙으로 모인 컴팩트 레이아웃) -->
+    <section class="board-content detail-layout" v-else>
+      <form class="board-detail" @submit.prevent="submitForm">
+        <div class="detail-card">
+          <div class="detail-heading">
+            <!-- 1) 배너 및 제목부 -->
+            <div class="detail-title-wrap">
+              <span class="board-list-category detail-badge editor-category-badge" :class="getCategoryClass(form.category)">
+                {{ form.category }}
+                <select v-model="form.category" class="editor-select-overlay">
+                  <option
+                    v-for="category in categories.filter(c => c !== '전체')"
+                    :key="category"
+                    :value="category"
+                  >
+                    {{ category }}
+                  </option>
+                </select>
+              </span>
+              <input 
+                v-model="form.title" 
+                type="text" 
+                required 
+                maxlength="100" 
+                placeholder="제목을 입력하세요"
+                class="editor-title-input" 
+              />
+            </div>
+            
+            <!-- 2) 작성자 및 비밀번호부 -->
+            <div class="detail-meta-wrap">
+              <span class="detail-meta-item">
+                <span class="meta-label">작성자</span>
+                <input 
+                  v-model="form.nickname" 
+                  type="text" 
+                  required 
+                  maxlength="15" 
+                  placeholder="닉네임 입력"
+                  class="editor-meta-input" 
+                  :disabled="isEditing"
+                />
+              </span>
+              <span class="detail-meta-divider" v-if="isCreating">|</span>
+              <span class="detail-meta-item" v-if="isCreating">
+                <span class="meta-label">비밀번호</span>
+                <input 
+                  v-model="form.password" 
+                  type="password" 
+                  required 
+                  maxlength="20" 
+                  placeholder="비밀번호 입력"
+                  class="editor-meta-input" 
+                />
+              </span>
+            </div>
+          </div>
 
-        <div class="editor-card">
-          <!-- 카테고리 선택 -->
-          <label class="form-field">
-            <span>카테고리</span>
-            <select
-              v-model="form.category"
-              class="form-input"
-            >
-              <option
-                v-for="category in categories.filter(c => c !== '전체')"
-                :key="category"
-                :value="category"
-              >
-                {{ category }}
-              </option>
-            </select>
-          </label>
-
-          <!-- 닉네임 입력란 -->
-          <label class="form-field">
-            <span>닉네임</span>
-            <input 
-              v-model="form.nickname" 
-              type="text" 
+          <!-- 본문 입력 영역 -->
+          <div class="detail-body">
+            <textarea 
+              v-model="form.content" 
+              rows="15" 
               required 
-              maxlength="15" 
-              placeholder="닉네임을 입력해주세요 (공백 제외)"
-              class="form-input" 
-              :disabled="isEditing"
-            />
-            <small class="form-help-text" v-if="isEditing">* 작성자 닉네임은 수정할 수 없습니다.</small>
-          </label>
+              maxlength="1000" 
+              placeholder="내용을 입력하세요"
+              class="editor-textarea"
+            ></textarea>
+          </div>
 
-          <label class="form-field">
-            <span>제목</span>
-            <input v-model="form.title" type="text" required maxlength="100" class="form-input" />
-          </label>
-
-          <label class="form-field">
-            <span>내용</span>
-            <textarea v-model="form.content" rows="12" required maxlength="1000" class="form-textarea"></textarea>
-          </label>
-
-          <label class="form-field" v-if="isCreating">
-            <span>비밀번호</span>
-            <input v-model="form.password" type="password" required maxlength="20" class="form-input" />
-          </label>
-
-          <div class="form-actions">
+          <!-- 하단 버튼 영역 -->
+          <div class="detail-actions">
             <button class="secondary-button" type="button" @click="cancelForm">취소</button>
             <button class="primary-button" type="submit">저장</button>
           </div>
@@ -234,12 +284,14 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import {
   listBoards,
   createBoard,
   updateBoard,
-  deleteBoard
+  deleteBoard,
+  toggleLike,
+  incrementViews
 } from '../services/boardService'
 
 const searchTerm = ref('')
@@ -258,27 +310,53 @@ const form = ref({
 })
 
 const boards = ref(listBoards())
-const pageSize = 5
+const pageSize = 10 
 const currentPage = ref(1)
+
+const userLikedPostIds = ref([])
+const viewedPostIds = ref([])
+
+onMounted(() => {
+  const savedLikes = localStorage.getItem('user-liked-posts')
+  if (savedLikes) {
+    try {
+      userLikedPostIds.value = JSON.parse(savedLikes)
+    } catch (e) {
+      userLikedPostIds.value = []
+    }
+  }
+
+  const savedViews = sessionStorage.getItem('user-viewed-posts')
+  if (savedViews) {
+    try {
+      viewedPostIds.value = JSON.parse(savedViews)
+    } catch (e) {
+      viewedPostIds.value = []
+    }
+  }
+})
+
+const isCurrentPostLiked = computed(() => {
+  if (!selectedId.value) return false
+  return userLikedPostIds.value.includes(selectedId.value)
+})
 
 const filteredBoards = computed(() => {
   const normalized = searchTerm.value.trim().toLowerCase()
 
-  return boards.value
-    .filter((item) => {
-      const searchMatched =
-        !normalized ||
-        item.title.toLowerCase().includes(normalized) ||
-        item.content.toLowerCase().includes(normalized) ||
-        item.nickname.toLowerCase().includes(normalized)
+  return boards.value.filter((item) => {
+    const searchMatched =
+      !normalized ||
+      item.title.toLowerCase().includes(normalized) ||
+      item.content.toLowerCase().includes(normalized) ||
+      item.nickname.toLowerCase().includes(normalized)
 
-      const categoryMatched =
-        selectedCategory.value === '전체' ||
-        item.category === selectedCategory.value
+    const categoryMatched =
+      selectedCategory.value === '전체' ||
+      item.category === selectedCategory.value
 
-      return searchMatched && categoryMatched
-    })
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    return searchMatched && categoryMatched
+  })
 })
 
 const totalPages = computed(() => Math.max(1, Math.ceil(filteredBoards.value.length / pageSize)))
@@ -368,6 +446,13 @@ function selectBoard(id) {
   selectedId.value = id
   isCreating.value = false
   isEditing.value = false
+
+  if (!viewedPostIds.value.includes(id)) {
+    incrementViews(id)
+    viewedPostIds.value.push(id)
+    sessionStorage.setItem('user-viewed-posts', JSON.stringify(viewedPostIds.value))
+    refreshBoards()
+  }
 }
 
 function clearSelection() {
@@ -483,6 +568,24 @@ function confirmDelete() {
   isEditing.value = false
   refreshBoards()
 }
+
+function handleLikeToggle() {
+  if (!selectedId.value) return
+
+  const id = selectedId.value
+  const hasLiked = isCurrentPostLiked.value
+
+  if (hasLiked) {
+    userLikedPostIds.value = userLikedPostIds.value.filter(likedId => likedId !== id)
+    toggleLike(id, false)
+  } else {
+    userLikedPostIds.value.push(id)
+    toggleLike(id, true)
+  }
+
+  localStorage.setItem('user-liked-posts', JSON.stringify(userLikedPostIds.value))
+  refreshBoards()
+}
 </script>
 
 <style scoped>
@@ -491,26 +594,28 @@ function confirmDelete() {
   max-width: none;
   margin: 0;
   padding: 24px 28px 40px;
-  min-height: 100%;
+  min-height: 100vh;
+  scrollbar-gutter: stable;
   background: var(--bg);
   color: var(--text);
   font-family: var(--sans);
 }
 
+/* 헤더 영역 */
 .board-header {
   display: flex;
   flex-direction: column;
-  margin-bottom: 18px;
   gap: 16px;
+  margin-bottom: 18px;
   padding: 18px 0 20px;
   border-bottom: 1px solid var(--border);
 }
 
-.header-top {
+.header-first-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%;
+  min-height: 38px;
 }
 
 .board-header h1 {
@@ -518,29 +623,31 @@ function confirmDelete() {
   font-size: 1.4rem;
   color: var(--text-h);
   font-family: var(--heading);
+  line-height: 1;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
   flex-shrink: 0;
 }
 
-.board-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.main-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  max-width: none;
-  gap: 20px;
-}
-
-.search-and-category {
+.header-second-row {
   display: flex;
   align-items: center;
   gap: 16px;
-  flex: 1;
+  width: 100%;
+  height: 38px;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.15s ease, visibility 0.15s ease;
+}
+
+.header-second-row.hide-layout {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  user-select: none;
 }
 
 .search-box {
@@ -581,7 +688,7 @@ function confirmDelete() {
 .category-tabs {
   display: flex;
   gap: 6px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .category-tab-btn {
@@ -594,6 +701,7 @@ function confirmDelete() {
   color: var(--text);
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .category-tab-btn:hover {
@@ -613,6 +721,7 @@ function confirmDelete() {
   font-weight: 600;
 }
 
+/* 레이아웃 래퍼 */
 .board-content {
   display: flex;
   justify-content: center;
@@ -621,15 +730,22 @@ function confirmDelete() {
   gap: 24px;
 }
 
-/* --- 100점짜리 목록 조회 스타일 (철저히 보존) --- */
+.board-content.list-layout {
+  max-width: 100%;
+}
+
+.board-content.detail-layout {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
 .board-list-wrapper,
 .board-detail {
   width: 100%;
-  max-width: none;
   background: transparent;
   border: none;
-  padding: 20px 0;
-  min-height: 420px;
+  padding: 10px 0;
+  min-height: auto;
 }
 
 .board-table-container {
@@ -642,9 +758,9 @@ function confirmDelete() {
 .board-table-header,
 .board-list li {
   display: grid;
-  grid-template-columns: 80px 1fr 120px 100px;
+  grid-template-columns: 60px 80px 1fr 110px 100px 80px 80px;
   align-items: center;
-  gap: 24px;
+  gap: 16px;
 }
 
 .board-table-header {
@@ -657,23 +773,12 @@ function confirmDelete() {
   opacity: 0.8;
 }
 
-.col-category {
-  text-align: center;
-}
-
-.col-title {
-  text-align: left;
-  min-width: 0;
-  padding-left: 16px; 
-}
-
-.col-author {
-  text-align: left;
-  padding-left: 16px;
-}
-.col-date {
-  text-align: right;
-}
+.col-seq { text-align: center; }
+.col-category { text-align: center; }
+.col-title { text-align: left; min-width: 0; padding-left: 8px; }
+.col-author { text-align: left; padding-left: 4px; }
+.col-date { text-align: center; }
+.col-stats-like, .col-stats-view { text-align: center; }
 
 .board-list {
   list-style: none;
@@ -682,7 +787,7 @@ function confirmDelete() {
 }
 
 .board-list li {
-  padding: 15px 18px;
+  padding: 14px 18px;
   border-bottom: 1px solid var(--border);
   cursor: pointer;
   transition: background-color 0.15s ease;
@@ -698,6 +803,17 @@ function confirmDelete() {
   background: var(--accent-bg);
 }
 
+/* 
+  👇 [수정된 디자인 영역] 
+  카테고리, 제목 제외 모든 텍스트 요소를 투명도 80(0.8)으로 일괄 통일 
+*/
+.board-item-seq {
+  font-size: 0.88rem;
+  color: var(--text);
+  opacity: 0.8; /* 👈 60% -> 80% 변경 */
+  font-family: var(--sans);
+}
+
 .board-item-title {
   font-size: 0.95rem;
   color: var(--text-h);
@@ -709,6 +825,32 @@ function confirmDelete() {
   text-overflow: ellipsis;
 }
 
+.board-item-author {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-h);
+  opacity: 0.8; /* 👈 90% -> 80% 변경 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.board-item-meta {
+  color: var(--text);
+  font-size: 0.82rem;
+  white-space: nowrap;
+  opacity: 0.8; /* 👈 55% -> 80% 변경 */
+}
+
+.stat-number {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text);
+  opacity: 0.8; /* 👈 모든 통계 수치 투명도 80% 고정 */
+}
+
+/* 카테고리 뱃지 고유 스타일 */
 .board-list-category {
   display: inline-block;
   padding: 3px 8px;
@@ -740,24 +882,7 @@ function confirmDelete() {
   color: #c26410;
 }
 
-.board-item-author {
-  font-size: 0.85rem;
-  font-weight: 400;
-  color: var(--text);
-  opacity: 0.8;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: block;
-}
-
-.board-item-meta {
-  color: var(--text);
-  font-size: 0.82rem;
-  white-space: nowrap;
-  opacity: 0.55;
-}
-
+/* 페이지네이션 */
 .pagination {
   display: flex;
   justify-content: center;
@@ -795,7 +920,7 @@ function confirmDelete() {
   flex-wrap: wrap;
 }
 
-/* --- 목록 조회와 100% 동기화된 상세정보 메타 스타일 --- */
+/* 상세정보 카드 */
 .detail-card {
   display: grid;
   gap: 24px;
@@ -837,7 +962,12 @@ function confirmDelete() {
   word-break: break-all;
 }
 
-/* 목록 정보 색상 및 투명도 완벽 동기화 */
+.detail-title-seq {
+  color: var(--sub);
+  margin-right: 4px;
+  font-weight: 500;
+}
+
 .detail-meta-wrap {
   display: flex;
   align-items: center;
@@ -852,30 +982,26 @@ function confirmDelete() {
   gap: 6px;
 }
 
-/* 라벨 텍스트 색상 및 투명도 설정 (차분하게 서브 텍스트화) */
 .meta-label {
   font-weight: 400;
   color: var(--text);
   opacity: 0.55; 
 }
 
-/* ★ 작성자명 색상: 목록의 `.board-item-author`와 100% 일치 */
 .meta-value-author {
   font-size: 0.85rem;
   font-weight: 400;
   color: var(--text);
-  opacity: 0.8; /* 목록 작성자 투명도와 동일하게 일치 */
+  opacity: 0.8; 
 }
 
-/* ★ 등록일 색상: 목록의 `.board-item-meta`와 100% 일치 */
 .meta-value-date {
   font-size: 0.82rem;
   font-weight: 400;
   color: var(--text);
-  opacity: 0.55; /* 목록 등록일 투명도와 동일하게 일치 */
+  opacity: 0.55; 
 }
 
-/* 원하셨던 본연의 깔끔하고 정돈된 버티컬 바(|) 구분선 복구 */
 .detail-meta-divider {
   color: var(--text);
   opacity: 0.3;
@@ -890,7 +1016,7 @@ function confirmDelete() {
 }
 
 .detail-content {
-  min-height: 260px;
+  min-height: 200px;
   white-space: pre-wrap;
   line-height: 1.85;
   letter-spacing: 0.01em;
@@ -899,13 +1025,55 @@ function confirmDelete() {
   font-size: 1.08rem;
 }
 
-.detail-actions,
-.form-actions {
+.detail-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   gap: 10px;
   padding-top: 12px;
   border-top: 1px dashed var(--border);
+}
+
+.right-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.like-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--sans);
+  user-select: none;
+}
+
+.like-button:hover {
+  background: var(--accent-bg);
+  border-color: var(--sub);
+}
+
+.like-button.liked {
+  border-color: var(--sub);
+  background: var(--accent-bg);
+}
+
+.like-label {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text);
+  opacity: 0.7;
+}
+
+.like-count {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-h);
 }
 
 .primary-button,
@@ -936,72 +1104,89 @@ function confirmDelete() {
   border-color: var(--point);
 }
 
-.board-form-page {
+/* 글쓰기/수정 폼 */
+.editor-category-badge {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.editor-select-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  display: grid;
-  gap: 16px;
-  padding: 20px 0;
+  height: 100%;
+  opacity: 0; 
+  cursor: pointer;
 }
 
-.form-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-}
-
-.form-header h2 {
-  margin: 0;
+.editor-title-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 1.4rem;
+  font-weight: 700;
   color: var(--text-h);
+  outline: none;
+  padding: 0;
   font-family: var(--heading);
-  font-size: 1.3rem;
 }
 
-.editor-card {
-  width: 100%;
-  display: grid;
-  gap: 16px;
-  padding: 24px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface);
-  box-shadow: var(--shadow);
-}
-
-.form-field {
-  display: grid;
-  gap: 8px;
+.editor-title-input::placeholder {
   color: var(--text);
-  font-size: 0.95rem;
+  opacity: 0.25;
 }
 
-.form-input,
-.form-textarea {
+.editor-meta-input {
+  border: none;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  color: var(--text);
+  font-size: 0.85rem;
+  outline: none;
+  width: 80px;
+  padding: 0;
+  font-family: var(--sans);
+}
+
+.editor-meta-input:focus {
+  border-bottom-color: var(--sub); 
+}
+
+.editor-meta-input::placeholder {
+  color: var(--text);
+  opacity: 0.3;
+}
+
+.editor-meta-input:disabled {
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
+.editor-textarea {
   width: 100%;
+  min-height: 260px;
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 10px 12px;
+  border-radius: 8px;
   background: var(--bg);
   color: var(--text);
+  font-size: 1.02rem;
+  line-height: 1.8;
+  padding: 16px;
+  outline: none;
+  resize: vertical;
   font-family: var(--sans);
   box-sizing: border-box;
 }
 
-.form-input:disabled {
-  opacity: 0.75;
-  background-color: var(--accent-bg);
-  cursor: not-allowed;
+.editor-textarea:focus {
+  border-color: var(--sub);
 }
 
-.form-help-text {
-  font-size: 0.8rem;
-  color: var(--sub);
-  opacity: 0.8;
-}
-
-.form-textarea {
-  min-height: 400px;
-  resize: vertical;
+.editor-textarea::placeholder {
+  color: var(--text);
+  opacity: 0.35;
 }
 
 .empty-state {
@@ -1010,6 +1195,7 @@ function confirmDelete() {
   text-align: center;
 }
 
+/* 반응형 스타일 */
 @media (max-width: 900px) {
   .board-table-header {
     display: none;
@@ -1023,19 +1209,40 @@ function confirmDelete() {
     padding: 16px;
   }
 
+  .col-seq,
   .col-category, 
   .col-title, 
   .col-author, 
+  .col-stats-like,
+  .col-stats-view,
   .col-date {
     text-align: left;
     width: 100%;
     padding: 0;
   }
 
+  .col-seq::before {
+    content: "글번호 ";
+    font-size: 0.8rem;
+    opacity: 0.8;
+  }
+
+  .col-stats-like::before {
+    content: "좋아요 ";
+    font-size: 0.8rem;
+    opacity: 0.8;
+  }
+  
+  .col-stats-view::before {
+    content: "조회수 ";
+    font-size: 0.8rem;
+    opacity: 0.8;
+  }
+
   .col-date {
     display: flex;
     justify-content: flex-start;
-    opacity: 0.6;
+    opacity: 0.8;
     font-size: 0.8rem;
   }
 
@@ -1051,35 +1258,33 @@ function confirmDelete() {
 
   .board-header {
     flex-direction: column;
-    align-items: stretch;
+    gap: 12px;
   }
 
-  .main-actions {
-    flex-direction: column;
-    align-items: stretch;
+  .header-first-row {
+    width: 100%;
   }
 
-  .search-and-category {
+  .header-second-row {
     flex-direction: column;
     align-items: stretch;
+    width: 100%;
+    gap: 10px;
+    height: auto;
+    min-height: auto;
+  }
+
+  .header-second-row.hide-layout {
+    display: none;
   }
 
   .search-box {
     max-width: none;
   }
 
-  .write-button {
-    margin-left: 0;
-    margin-top: 8px;
-  }
-
-  .search-input {
-    min-width: 0;
-  }
-
-  .form-header {
-    flex-direction: column;
-    align-items: flex-start;
+  .write-button,
+  .header-right .secondary-button {
+    width: auto;
   }
 
   .detail-card {
@@ -1097,14 +1302,28 @@ function confirmDelete() {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
+    width: 100%;
   }
   
+  .editor-category-select,
+  .editor-title-input {
+    width: 100%;
+  }
+
   .detail-meta-wrap {
     width: 100%;
     justify-content: flex-start;
     border-top: 1px dashed var(--border);
     padding-top: 12px;
     font-size: 0.8rem;
+    flex-wrap: wrap; 
+    gap: 8px 12px;
+  }
+
+  .detail-actions {
+    flex-direction: row; 
+    justify-content: space-between;
+    width: 100%;
   }
 }
 </style>
