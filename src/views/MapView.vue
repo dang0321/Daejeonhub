@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, onBeforeUnmount, ref, watch } from 'vue'
+import { onMounted, onBeforeUnmount, ref, watch, computed } from 'vue'
 import { getPlacesByCategory, CATEGORIES } from '../services/mapService'
 
 const mapContainer = ref(null)
@@ -130,6 +130,83 @@ const loadPlaces = async () => {
   }
 }
 
+// ===== 경로 계산 기능 =====
+const routePoints = ref([])   // 경로에 담은 장소들 (순서 있음)
+let routePolyline = null      // 지도에 그린 경로 선
+
+// 두 지점 직선거리(km)
+const haversine = (a, b) => {
+  const R = 6371, rad = (d) => d * Math.PI / 180
+  const dLat = rad(b.lat - a.lat), dLon = rad(b.lng - a.lng)
+  const h = Math.sin(dLat / 2) ** 2 +
+    Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLon / 2) ** 2
+  return 2 * R * Math.asin(Math.sqrt(h))
+}
+
+// 총 거리(km) + 예상 소요시간(분) 계산
+const routeSummary = computed(() => {
+  const pts = routePoints.value
+  if (pts.length < 2) return { km: 0, minutes: 0 }
+  let km = 0
+  for (let i = 0; i < pts.length - 1; i++) {
+    km += haversine(
+      { lat: Number(pts[i].mapy), lng: Number(pts[i].mapx) },
+      { lat: Number(pts[i + 1].mapy), lng: Number(pts[i + 1].mapx) }
+    )
+  }
+  km *= 1.3                                   // 직선→도로 보정
+  const minutes = Math.round(km / 40 * 60)    // 자동차 40km/h 기준
+  return { km: km.toFixed(1), minutes }
+})
+
+// 경로에 장소 추가 (중복 방지)
+const addToRoute = (place) => {
+  if (routePoints.value.some((p) => p.contentid === place.contentid)) return
+  routePoints.value.push(place)
+  drawRoute()
+}
+
+// 경로에서 장소 제거
+const removeFromRoute = (id) => {
+  routePoints.value = routePoints.value.filter((p) => p.contentid !== id)
+  drawRoute()
+}
+
+// 순서 이동 (위/아래)
+const moveRoutePoint = (index, dir) => {
+  const arr = routePoints.value
+  const newIndex = index + dir
+  if (newIndex < 0 || newIndex >= arr.length) return
+  ;[arr[index], arr[newIndex]] = [arr[newIndex], arr[index]]
+  routePoints.value = [...arr]
+  drawRoute()
+}
+
+// 경로 전체 초기화
+const clearRoute = () => {
+  routePoints.value = []
+  drawRoute()
+}
+
+// 지도에 경로 선(폴리라인) 그리기
+const drawRoute = () => {
+  if (!map.value || !kakaoMapInstance) return
+  if (routePolyline) { routePolyline.setMap(null); routePolyline = null }
+  if (routePoints.value.length < 2) return
+
+  const path = routePoints.value.map(
+    (p) => new kakaoMapInstance.LatLng(Number(p.mapy), Number(p.mapx))
+  )
+  routePolyline = new kakaoMapInstance.Polyline({
+    path,
+    strokeWeight: 4,
+    strokeColor: '#2563eb',
+    strokeOpacity: 0.8,
+    strokeStyle: 'solid'
+  })
+  routePolyline.setMap(map.value)
+}
+
 watch(selectedCategory, loadPlaces)
 
 onMounted(async () => {
@@ -198,9 +275,41 @@ onBeforeUnmount(clearMarkers)
           >
             <strong>{{ place.title }} <span class="cat-label">({{ CATEGORIES[place.category]?.label }})</span></strong>
             <span class="addr">{{ place.addr1 || '주소 정보 없음' }}</span>
+            <button class="route-add-btn" @click.stop="addToRoute(place)">＋ 경로에 추가</button>
           </li>
         </ul>
       </div>
+    </div>
+
+    <div v-if="routePoints.length > 0" class="route-panel">
+      <div class="route-header">
+        <h3>경로 계산 ({{ routePoints.length }}곳)</h3>
+        <button class="route-clear" @click="clearRoute">전체 초기화</button>
+      </div>
+
+      <ol class="route-list">
+        <li v-for="(p, i) in routePoints" :key="p.contentid">
+          <span class="route-role">
+            {{ i === 0 ? '출발' : i === routePoints.length - 1 ? '도착' : '경유' }}
+          </span>
+          <span class="route-name">{{ p.title }}</span>
+          <span class="route-actions">
+            <button @click="moveRoutePoint(i, -1)" :disabled="i === 0">▲</button>
+            <button @click="moveRoutePoint(i, 1)" :disabled="i === routePoints.length - 1">▼</button>
+            <button @click="removeFromRoute(p.contentid)">✕</button>
+          </span>
+        </li>
+      </ol>
+
+      <div v-if="routePoints.length >= 2" class="route-summary">
+        🚗 예상 소요시간: 약 {{ routeSummary.minutes }}분 (총 {{ routeSummary.km }}km)
+        <p class="route-note">
+          ※ 표시된 소요시간은 각 지점을 직선거리로 이은 뒤 자동차 평균 속도(40km/h)를
+          기준으로 계산한 예상치입니다. 실제 도로 경로·교통 상황에 따라 실제 소요시간과는
+          차이가 있을 수 있습니다.
+        </p>
+      </div>
+      <p v-else class="route-hint">장소를 2곳 이상 추가하면 소요시간이 계산됩니다.</p>
     </div>
   </section>
 </template>
@@ -376,4 +485,36 @@ onBeforeUnmount(clearMarkers)
   color: #6a7d68;
   font-size: 13px;
 }
+.route-add-btn {
+  margin-top: 6px; align-self: flex-start;
+  border: 1px solid #2563eb; background: #fff; color: #2563eb;
+  border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer;
+}
+.route-add-btn:hover { background: #2563eb; color: #fff; }
+
+.route-panel {
+  background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 16px;
+}
+.route-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.route-header h3 { margin: 0; font-size: 17px; color: var(--sub); }
+.route-clear {
+  border: 1px solid #d1d5db; background: #fff; color: #666;
+  border-radius: 6px; padding: 4px 10px; font-size: 13px; cursor: pointer;
+}
+.route-list { list-style: none; padding: 0; margin: 0 0 12px; display: flex; flex-direction: column; gap: 6px; }
+.route-list li { display: flex; align-items: center; gap: 10px; padding: 8px; background: #f8fafc; border-radius: 8px; }
+.route-role {
+  font-size: 12px; font-weight: 600; color: #fff; background: #64748b;
+  border-radius: 999px; padding: 2px 8px; min-width: 34px; text-align: center;
+}
+.route-name { flex: 1; font-size: 14px; }
+.route-actions { display: flex; gap: 4px; }
+.route-actions button {
+  width: 26px; height: 26px; border: 1px solid #d1d5db; background: #fff;
+  border-radius: 6px; cursor: pointer; font-size: 12px;
+}
+.route-actions button:disabled { opacity: 0.3; cursor: default; }
+.route-summary { padding: 12px; background: #eff6ff; border-radius: 8px; font-size: 15px; font-weight: 600; color: #1e40af; }
+.route-note { margin: 8px 0 0; font-size: 12px; font-weight: 400; color: #64748b; line-height: 1.5; }
+.route-hint { font-size: 13px; color: #94a3b8; }
 </style>
