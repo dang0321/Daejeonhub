@@ -1,12 +1,13 @@
 <script setup>
 import { computed } from 'vue'
+import DashboardCard from '../components/common/DashboardCard.vue'
 
 const stats = [
-  { title: '총 관광지', value: '128', change: '+12% vs last month', accent: 'var(--sub)' },
-  { title: '방문객 수', value: '24.8K', change: '+8% this week', accent: '#2dd4bf' },
-  { title: '예약률', value: '78%', change: '+5% rising trend', accent: '#f59e0b' },
-  { title: '추천 리뷰', value: '1,240', change: '+18 new comments', accent: '#8b5cf6' },
-  { title: '체류 시간', value: '3.2H', change: '+0.4H average', accent: '#ef4444' }
+  { title: '게시글 수', value: '18', icon: '📝' },
+  { title: '좋아요 수', value: '245', icon: '❤️' },
+  { title: '관광 데이터 수', value: '512', icon: '🏛️' },
+  { title: '카테고리 수', value: '5', icon: '📂' },
+  { title: '대표 카테고리', value: '관광지', icon: '⭐' }
 ]
 
 const categoryData = [
@@ -54,11 +55,13 @@ const donutStyle = computed(() => {
     </div>
 
     <div class="stats-grid">
-      <article v-for="stat in stats" :key="stat.title" class="stat-card">
-        <p class="stat-title">{{ stat.title }}</p>
-        <h3>{{ stat.value }}</h3>
-        <span :style="{ color: stat.accent }">{{ stat.change }}</span>
-      </article>
+      <DashboardCard
+        v-for="stat in stats"
+        :key="stat.title"
+        :title="stat.title"
+        :value="stat.value"
+        :icon="stat.icon"
+      />
     </div>
 
     <div class="chart-grid">
