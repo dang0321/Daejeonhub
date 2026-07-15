@@ -1,10 +1,10 @@
 // 카테고리별 JSON 경로 + 색상 정의 (한 곳에서 관리)
 export const CATEGORIES = {
-  tourist:  { label: '관광지',   path: '/data/대전_충청권_관광지.json',   color: '#2D5A27' },
-  food:     { label: '맛집',     path: '/data/대전_충청권_음식점.json',   color: '#4C7C3B' },
-  stay:     { label: '숙박',     path: '/data/대전_충청권_숙박.json',     color: '#6B8F45' },
-  culture:  { label: '문화시설', path: '/data/대전_충청권_문화시설.json', color: '#FFCA28' },
-  shopping: { label: '쇼핑',     path: '/data/대전_충청권_쇼핑.json',     color: '#3F6D34' }
+  tourist:  { label: '관광지',   path: '/data/대전_충청권_관광지.json',   color: '#2563eb' },
+  food:     { label: '맛집',     path: '/data/대전_충청권_음식점.json',   color: '#dc2626' },
+  stay:     { label: '숙박',     path: '/data/대전_충청권_숙박.json',     color: '#16a34a' },
+  culture:  { label: '문화시설', path: '/data/대전_충청권_문화시설.json', color: '#9333ea' },
+  shopping: { label: '쇼핑',     path: '/data/대전_충청권_쇼핑.json',     color: '#ea580c' }
 }
 
 // 대전/충청 범위 밖 좌표(깨진 데이터) 걸러내기

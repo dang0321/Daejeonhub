@@ -20,8 +20,8 @@ const getMarkerImage = (color, active = false) => {
   const key = `${color}-${active}`
   if (markerImageCache[key]) return markerImageCache[key]
 
-  const size = active ? 24 : 16        // 강조 시 더 크게
-  const h = active ? 42 : 18
+  const size = active ? 32 : 18
+  const h = active ? 44 : 25
   const stroke = active ? '<path d="M14 0C6.3 0 0 6.3 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.3 21.7 0 14 0z" fill="none" stroke="#ffb300" stroke-width="3"/>' : ''
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${h}" viewBox="0 0 28 40">
