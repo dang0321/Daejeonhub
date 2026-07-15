@@ -119,7 +119,7 @@
             <textarea v-model="form.content" rows="12" required maxlength="1000" class="form-textarea"></textarea>
           </label>
 
-          <label class="form-field">
+          <label class="form-field" v-if="isCreating">
             <span>비밀번호</span>
             <input v-model="form.password" type="password" required maxlength="20" class="form-input" />
           </label>
@@ -232,12 +232,20 @@ function startCreate() {
 function startEdit() {
   if (!selectedBoard.value) return
 
+  const password = prompt('수정하려면 비밀번호를 입력하세요.')
+  if (!password) return
+
+  if (password !== selectedBoard.value.password) {
+    alert('비밀번호가 일치하지 않습니다.')
+    return
+  }
+
   isCreating.value = false
   isEditing.value = true
   form.value = {
     title: selectedBoard.value.title,
     content: selectedBoard.value.content,
-    password: ''
+    password
   }
 }
 
@@ -265,7 +273,7 @@ function submitForm() {
     return
   }
 
-  const updated = updateBoard(
+  updateBoard(
     selectedBoard.value.id,
     {
       title: form.value.title,
@@ -273,11 +281,6 @@ function submitForm() {
     },
     form.value.password
   )
-
-  if (!updated) {
-    alert('비밀번호가 일치하지 않거나 게시글을 찾을 수 없습니다.')
-    return
-  }
 
   cancelForm()
   refreshBoards()
