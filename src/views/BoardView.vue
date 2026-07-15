@@ -1,45 +1,60 @@
 <template>
   <div class="board-page">
-    <!-- 상단 '게시판' 헤더 영역 -->
+    <!-- 상단 '게시판' 헤더 영역: 2단 구조로 고정하여 모든 화면에서 완벽한 간격 유지 -->
     <header class="board-header">
-      <div class="header-top">
+      <!-- 1층: 타이틀과 우측 액션 버튼 -->
+      <div class="header-first-row">
         <h1>게시판</h1>
-        <div class="board-actions" v-if="selectedBoard && !isCreating && !isEditing">
-          <button class="secondary-button" type="button" @click="clearSelection">목록으로</button>
+        <div class="header-right">
+          <button 
+            v-if="!selectedBoard && !isCreating && !isEditing" 
+            class="primary-button write-button" 
+            type="button" 
+            @click="startCreate"
+          >
+            글쓰기
+          </button>
+          <button 
+            v-else 
+            class="secondary-button" 
+            type="button" 
+            @click="clearSelection"
+          >
+            목록으로
+          </button>
         </div>
       </div>
 
-      <!-- 목록 보기 화면의 헤더 컨트롤 -->
-      <div class="board-actions main-actions" v-if="!selectedBoard && !isCreating && !isEditing">
-        <div class="search-and-category">
-          <div class="search-box">
-            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <input
-              v-model="searchTerm"
-              type="search"
-              placeholder="제목, 내용 또는 닉네임을 검색하세요"
-              class="search-input"
-            />
-          </div>
-
-          <div class="category-tabs">
-            <button
-              v-for="category in categories"
-              :key="category"
-              type="button"
-              class="category-tab-btn"
-              :class="{ active: selectedCategory === category }"
-              @click="selectedCategory = category"
-            >
-              {{ category }}
-            </button>
-          </div>
+      <!-- 2층: 카테고리와 검색창 (상세/수정/글쓰기 상태에서도 높이와 간격을 유지하여 덜컥거림 완벽 방지) -->
+      <div 
+        class="header-second-row" 
+        :class="{ 'hide-layout': selectedBoard || isCreating || isEditing }"
+      >
+        <div class="category-tabs">
+          <button
+            v-for="category in categories"
+            :key="category"
+            type="button"
+            class="category-tab-btn"
+            :class="{ active: selectedCategory === category }"
+            @click="selectedCategory = category"
+          >
+            {{ category }}
+          </button>
         </div>
 
-        <button class="primary-button write-button" type="button" @click="startCreate">글쓰기</button>
+        <div class="search-box">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input
+            v-model="searchTerm"
+            type="search"
+            placeholder="제목, 내용 또는 닉네임을 검색하세요"
+            class="search-input"
+          />
+        </div>
       </div>
     </header>
 
@@ -51,7 +66,6 @@
         </div>
 
         <div v-else class="board-table-container">
-          <!-- [순서 조정] 분류 - 제목 - 작성자 - 등록일 - 좋아요 - 조회수 -->
           <div class="board-table-header">
             <span class="col-category">분류</span>
             <span class="col-title">제목</span>
@@ -575,26 +589,32 @@ function handleLikeToggle() {
   max-width: none;
   margin: 0;
   padding: 24px 28px 40px;
-  min-height: 100%;
+  min-height: 100vh; /* 화면의 최소 전체 높이를 지정하여 상하 덜컹거림 방지 */
+  scrollbar-gutter: stable; /* 스크롤바 유무에 상관없이 우측 레이아웃 공간을 유지하여 좌우 덜컹거림 원천 방지 */
   background: var(--bg);
   color: var(--text);
   font-family: var(--sans);
 }
 
+/* 
+  헤더 영역: 2단 구조
+  모든 화면에서 일정한 세로 공간을 점유하여 화면이 이동할 때 '게시판' 타이틀이 흔들리지 않습니다.
+*/
 .board-header {
   display: flex;
   flex-direction: column;
-  margin-bottom: 18px;
   gap: 16px;
+  margin-bottom: 18px;
   padding: 18px 0 20px;
   border-bottom: 1px solid var(--border);
 }
 
-.header-top {
+/* 1층: '게시판' 타이틀과 우측 글쓰기/목록으로 버튼 */
+.header-first-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%;
+  min-height: 38px;
 }
 
 .board-header h1 {
@@ -602,29 +622,33 @@ function handleLikeToggle() {
   font-size: 1.4rem;
   color: var(--text-h);
   font-family: var(--heading);
+  line-height: 1;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
   flex-shrink: 0;
 }
 
-.board-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.main-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  max-width: none;
-  gap: 20px;
-}
-
-.search-and-category {
+/* 2층: 카테고리 탭과 검색 상자 (1층 밑에 나란히 배치) */
+.header-second-row {
   display: flex;
   align-items: center;
   gap: 16px;
-  flex: 1;
+  width: 100%;
+  height: 38px; /* 고정 높이 부여 */
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.15s ease, visibility 0.15s ease;
+}
+
+/* 상세페이지, 수정/글쓰기 페이지에서도 높이(38px)는 그대로 차지하게 하여 상하 덜컹거림 해결 */
+.header-second-row.hide-layout {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  user-select: none;
 }
 
 .search-box {
@@ -665,7 +689,7 @@ function handleLikeToggle() {
 .category-tabs {
   display: flex;
   gap: 6px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .category-tab-btn {
@@ -678,6 +702,7 @@ function handleLikeToggle() {
   color: var(--text);
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .category-tab-btn:hover {
@@ -705,7 +730,7 @@ function handleLikeToggle() {
   gap: 24px;
 }
 
-/* --- 목록 조회 스타일 --- */
+/* --- 목록 조회 및 상세정보 최소 높이 표준화 --- */
 .board-list-wrapper,
 .board-detail {
   width: 100%;
@@ -713,7 +738,7 @@ function handleLikeToggle() {
   background: transparent;
   border: none;
   padding: 20px 0;
-  min-height: 420px;
+  min-height: 550px; /* 전체 컨텐츠 카드의 최소 높이를 일관되게 고정 */
 }
 
 .board-table-container {
@@ -723,10 +748,6 @@ function handleLikeToggle() {
   overflow: hidden;
 }
 
-/* 
-  [요청 레이아웃 순서 및 컬럼 비율]
-  분류(80px) 제목(1fr) 작성자(110px) 등록일(100px) 좋아요(80px) 조회수(80px)
-*/
 .board-table-header,
 .board-list li {
   display: grid;
@@ -1227,32 +1248,37 @@ function handleLikeToggle() {
     align-items: stretch;
   }
 
+  /* 반응형 모바일 헤더 대응 */
   .board-header {
     flex-direction: column;
-    align-items: stretch;
+    gap: 12px;
   }
 
-  .main-actions {
-    flex-direction: column;
-    align-items: stretch;
+  .header-first-row {
+    width: 100%;
   }
 
-  .search-and-category {
+  /* 모바일 화면에서는 불필요한 고정 높이를 해제하여 유연하게 대응 */
+  .header-second-row {
     flex-direction: column;
     align-items: stretch;
+    width: 100%;
+    gap: 10px;
+    height: auto;
+    min-height: auto;
+  }
+
+  .header-second-row.hide-layout {
+    display: none;
   }
 
   .search-box {
     max-width: none;
   }
 
-  .write-button {
-    margin-left: 0;
-    margin-top: 8px;
-  }
-
-  .search-input {
-    min-width: 0;
+  .write-button,
+  .header-right .secondary-button {
+    width: auto;
   }
 
   .detail-card {
