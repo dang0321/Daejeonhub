@@ -80,6 +80,7 @@ const sendMessage = async () => {
 }
 
 const handleKeydown = (event) => {
+  if (event.isComposing) return
   if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault()
     sendMessage()
@@ -125,6 +126,13 @@ const clearChat = () => {
           <div class="message-bubble">
             <strong>{{ message.role === 'user' ? '나' : 'AI' }}</strong>
             <p>{{ message.content }}</p>
+          </div>
+        </div>
+
+        <div v-if="isLoading" class="message-row assistant">
+          <div class="message-bubble typing-bubble">
+            <strong>AI</strong>
+            <p class="typing">작성 중<span class="dots"><span>.</span><span>.</span><span>.</span></span></p>
           </div>
         </div>
       </div>
@@ -306,4 +314,22 @@ textarea {
     width: 100%;
   }
 }
+
+.typing { display: flex; align-items: center; gap: 2px; }
+.dots { display: inline-flex; }
+.dots span {
+  opacity: 0;
+  animation: dotBlink 1.4s infinite;
+}
+.dots span:nth-child(1) { animation-delay: 0s; }
+.dots span:nth-child(2) { animation-delay: 0.2s; }
+.dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dotBlink {
+  0%   { opacity: 0; }
+  30%  { opacity: 1; }
+  60%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 </style>

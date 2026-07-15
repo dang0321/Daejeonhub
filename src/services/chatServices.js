@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { listBoards } from './boardService'
 
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions'
 const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY
@@ -44,11 +45,31 @@ export const createChatCompletion = async (messages, model = 'gpt-5-mini') => {
 
   const dataContext = await buildDataContext()
 
+  // 게시판 글 (매번 최신 읽기, 캐시 안 함)
+  let boardContext = ''
+  try {
+    const boards = listBoards()
+    if (boards && boards.length > 0) {
+      boardContext = boards
+        .slice(0, 30)
+        .map((b) => `- [${b.category}] ${b.title} (작성자: ${b.nickname}, 추천 ${b.likes})\n  ${(b.content || '').replace(/\n/g, ' ').slice(0, 80)}`)
+        .join('\n')
+    }
+  } catch {
+    boardContext = ''
+  }
+
   const systemPrompt = `당신은 대전·충청권 여행 정보를 도와주는 친절한 가이드입니다.
 아래는 실제 제공된 대전·충청권 장소 데이터입니다. 답변은 반드시 이 목록 안의 장소를 근거로 하세요.
 목록에 없는 장소는 지어내지 말고, 관련 정보가 없으면 "제공된 데이터에는 해당 정보가 없습니다"라고 답하세요.
 
-${dataContext}`
+${dataContext}
+
+아래는 우리 커뮤니티 게시판에 사용자들이 올린 글 목록입니다.
+게시판·후기·추천 글 관련 질문에는 이 목록을 근거로 답하세요.
+
+[게시판 글]
+${boardContext}`
 
   const payloadMessages = [
     { role: 'system', content: systemPrompt },
