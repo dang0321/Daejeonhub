@@ -1,6 +1,7 @@
 <script setup>
 import DashboardCard from '../components/common/DashboardCard.vue'
 import PieChart from '../components/common/PieChart.vue'
+import BarChart from '../components/common/BarChart.vue'
 
 const stats = [
   { title: '게시글 수', value: '18', icon: '📝' },
@@ -38,16 +39,10 @@ const stats = [
         description="관광 데이터 유형별 비율"
       />
 
-      <article class="chart-card bar-card">
-        <div class="card-header">
-          <h2>월별 방문 추이</h2>
-          <p>지난 6개월 트렌드</p>
-        </div>
-
-        <div class="chart-placeholder bar-placeholder">
-          <span>Bar Chart</span>
-        </div>
-      </article>
+      <BarChart
+        title="카테고리 비교"
+        description="카테고리별 비율 비교"
+      />
     </div>
   </section>
 </template>

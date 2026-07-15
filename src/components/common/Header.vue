@@ -3,7 +3,8 @@ const menuItems = [
   { name: '소개', path: '/' },
   { name: '게시판', path: '/board' },
   { name: '지도', path: '/map' },
-  { name: '챗봇', path: '/chat' }
+  { name: '챗봇', path: '/chat' },
+  { name: '대시보드', path: '/dashboard' }
 ]
 </script>
 
