@@ -92,8 +92,10 @@ const goBack = () => {
 
 .back-btn {
   border: none;
-  background: linear-gradient(135deg, #4f8b4b, #76b96d);
-  color: white;
+  background: #FFCA28;
+  color: #353839;
+  font-weight: bold;
+  font-family: var(--heading, 'Moneygraphy-Pixel', system-ui, 'Segoe UI', Roboto, sans-serif);
   padding: 10px 16px;
   border-radius: 999px;
   cursor: pointer;
@@ -102,12 +104,17 @@ const goBack = () => {
 }
 
 .region-card {
-  background: #eef7e8;
+  background: #ffffff;
   border-radius: 28px;
   padding: 32px;
   box-shadow: 0 20px 44px rgba(45, 92, 47, 0.12);
   border: 1px solid rgba(111, 169, 104, 0.16);
   animation: cardEnter 0.8s ease-out both;
+}
+
+.region-card h1 {
+  color: #353839;
+  margin: 14px;
 }
 
 .photo-frame {
@@ -165,7 +172,7 @@ h2 {
 
 .detail-box h3 {
   font-size: 18px;
-  color: #2f5f3b;
+  color: #353839;
   margin: 0 0 10px;
 }
 

@@ -36,6 +36,10 @@ const goToRegion = (slug) => {
   router.push({ name: 'Region', params: { regionName: slug } })
 }
 
+const goToMap = () => {
+  router.push({ name: 'Map' })
+}
+
 const goToService = (routeName) => {
   router.push({ name: routeName })
 }
@@ -46,15 +50,32 @@ const goToService = (routeName) => {
     <!-- 상단: 권역 소개 -->
     <section class="hero">
       <div class="hero-content">
-        <h1>DaejeonHub</h1>
-        <p>대전의 관광지, 문화시설, 맛집 정보를 한 곳에서 편하게 만나보세요.</p>
+        <h1 class="highlight">DaejeonHub</h1>
+        <svg viewBox="0 0 500 100" width="100%" height="auto" style="display: block; margin: 0 auto;">
+          <defs>
+            <!-- M 50,20 (시작 높이를 20으로 올림) / Q 250,110 (곡선 최하점을 110으로 조절) -->
+            <path id="smile-path" d="M 50,20 Q 250,110 450,20" fill="transparent" />
+          </defs>
+
+          <!-- font-size와 Y 좌표 조절을 위해 dy 속성 추가 -->
+          <text font-size="0.95rem" font-weight="bold" fill="#353839">
+            <textPath href="#smile-path" startOffset="50%" text-anchor="middle" dy="5">
+              대전의 관광지, 문화시설, 맛집 정보를 한 곳에서
+            </textPath>
+          </text>
+        </svg>
+        <button class="hero-cta" type="button" @click="goToMap">
+          지금 여행지 찾기 ▶
+        </button>
       </div>
     </section>
+
+    <div class="hero-divider"></div>
 
     <!-- 권역 소개 -->
     <section class="regions-section">
       <div class="container">
-        <h2>대전 권역 소개</h2>
+        <h2 class="section-title">대전 권역 소개</h2>
         <div class="regions-grid">
           <button
             v-for="region in regions"
@@ -74,7 +95,7 @@ const goToService = (routeName) => {
     <!-- 중간: 서비스 소개 -->
     <section class="services-section">
       <div class="container">
-        <h2>우리의 서비스</h2>
+        <h2 class="section-title">우리의 서비스</h2>
         <div class="services-grid">
           <button
             v-for="service in services"
@@ -95,7 +116,7 @@ const goToService = (routeName) => {
     <section class="data-section">
       <div class="container">
         <div class="data-content">
-          <h2>공공데이터 기반</h2>
+          <h2 class="section-title">공공데이터 기반</h2>
           <p>DaejeonHub는 대전광역시 및 정부에서 제공하는 공공데이터를 기반으로 신뢰할 수 있는 정보를 제공합니다.</p>
           <div class="data-features">
             <div class="feature">
@@ -133,6 +154,7 @@ const goToService = (routeName) => {
   width: 100%;
   background: linear-gradient(180deg, #f9fdf8 0%, #f4fbf0 45%, #eef7e7 100%);
   color: #2f5f3b;
+  font-family: var(--sans, 'Moneygraphy-Pixel', system-ui, 'Segoe UI', Roboto, sans-serif);
 }
 
 .container {
@@ -146,7 +168,7 @@ const goToService = (routeName) => {
   padding: 112px 24px 150px;
   text-align: center;
   color: #163720;
-  background: linear-gradient(135deg, #eaf8e7 0%, #cfecc0 45%, #9ed28a 100%);
+  background: #ffffff;
   overflow: hidden;
 }
 
@@ -170,28 +192,36 @@ const goToService = (routeName) => {
   transform: translateY(40px);
 }
 
+.hero-divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #353839 50%, transparent);
+  margin-top: -16px;
+  opacity: 0.8;
+}
+
 .hero-content {
   position: relative;
   z-index: 1;
   max-width: 760px;
   margin: 0 auto;
   padding: 50px;
-  border-radius: 30px;
-  background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(8px);
-  box-shadow: 0 18px 42px rgba(84, 122, 76, 0.16);
   animation: fadeUp 0.8s ease both;
 }
 
 .hero-content h1 {
+  font-family: var(--heading, 'Moneygraphy-Pixel', system-ui, 'Segoe UI', Roboto, sans-serif);
   font-size: clamp(2.6rem, 4.9vw, 3.9rem);
-  margin-bottom: 28px;
+  margin-bottom: 25px;
   font-weight: 800;
-  color: #194324;
+  color: #194324; 
   letter-spacing: -0.02em;
+  filter: drop-shadow(3px 3px 4px rgba(0, 0, 0, 0.2));
+  /*-webkit-text-stroke: 0.5px #ffffff; */ 
 }
 
 .hero-content p {
+  font-family: var(--sans, 'Moneygraphy-Pixel', system-ui, 'Segoe UI', Roboto, sans-serif);
   font-size: clamp(1.02rem, 2.2vw, 1.28rem);
   opacity: 0.95;
   font-weight: 400;
@@ -200,14 +230,25 @@ const goToService = (routeName) => {
   margin: 0 auto;
 }
 
-.hero-button {
-  background: var(--point);
-  color: white;
-  padding: 10px 20px;
-  border-radius: 50px;
-  font-weight: bold;
-  margin-top: 10px;
+.hero-cta {
+  font-family: var(--sans, 'Moneygraphy-Pixel', system-ui, 'Segoe UI', Roboto, sans-serif);
+  margin-top: 24px;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 24px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #353839;
+  background: #FFCA28;
   cursor: pointer;
+  box-shadow: 0 8px 20px rgba(255, 202, 40, 0.28);
+}
+
+.hero-cta:hover,
+.hero-cta:focus-visible {
+  outline: none;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(255, 202, 40, 0.34);
 }
 
 .regions-section,
@@ -217,18 +258,30 @@ const goToService = (routeName) => {
 }
 
 .regions-section {
-  background: transparent;
+  background: #ffffff;
   margin-top: -18px;
 }
 
-.regions-section h2,
-.services-section h2,
-.data-section h2 {
-  text-align: center;
+.section-title {
+  text-align: left;
   font-size: clamp(1.75rem, 3vw, 2.35rem);
   margin-bottom: 42px;
   color: #2f5f3b;
   font-weight: 700;
+  position: relative;
+  display: inline-block;
+  padding-bottom: 10px;
+}
+
+.section-title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 3px;
+  background: #2f5f3b;
+  border-radius: 999px;
 }
 
 .regions-grid {
@@ -238,14 +291,14 @@ const goToService = (routeName) => {
 }
 
 .region-card {
-  background: linear-gradient(145deg, #ffffff, #f6fff0);
+  background: #ffffff;
   padding: 28px 20px;
   border-radius: 24px;
   text-align: center;
   box-shadow: 0 12px 32px rgba(57, 108, 64, 0.12);
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
   cursor: pointer;
-  border: 1px solid rgba(111, 169, 104, 0.2);
+  border: 2px solid #2f5f3b;
   width: 100%;
   animation: fadeUp 0.7s ease both;
 }
@@ -340,7 +393,7 @@ const goToService = (routeName) => {
 }
 
 .data-section {
-  background: linear-gradient(180deg, rgba(242, 249, 238, 0.95) 0%, #eef8ea 100%);
+  background: #ffffff;
   margin-top: 28px;
 }
 
@@ -351,7 +404,6 @@ const goToService = (routeName) => {
   padding: 38px 30px;
   border-radius: 26px;
   background: rgba(255, 255, 255, 0.8);
-  box-shadow: 0 14px 34px rgba(57, 108, 64, 0.08);
 }
 
 .data-section > .container > p {
@@ -362,6 +414,7 @@ const goToService = (routeName) => {
 }
 
 .data-features {
+  margin-top: 32px;
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
