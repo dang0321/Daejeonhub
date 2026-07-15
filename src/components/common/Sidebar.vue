@@ -3,7 +3,8 @@ const menuItems = [
   { name: 'Home', path: '/' },
   { name: 'Board', path: '/board' },
   { name: 'Map', path: '/map' },
-  { name: 'Chat', path: '/chat' }
+  { name: 'Chat', path: '/chat' },
+  { name: 'Dashboard', path: '/dashboard' }
 ]
 </script>
 

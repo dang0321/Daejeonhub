@@ -6,6 +6,7 @@ import BoardView from '../views/BoardView.vue'
 import MapView from '../views/MapView.vue'
 import ChatView from '../views/ChatView.vue'
 import RegionView from '../views/RegionView.vue'
+import DashboardView from '../views/DashboardView.vue'
 
 const routes = [
   {
@@ -27,6 +28,11 @@ const routes = [
     path: '/chat',
     name: 'Chat',
     component: ChatView
+  },
+  {
+    path: '/dashboard',
+    name: 'Dashboard',
+    component: DashboardView
   },
   {
     path: '/region/:regionName',
