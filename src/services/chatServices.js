@@ -37,7 +37,7 @@ const buildDataContext = async () => {
   return cachedContext
 }
 
-export const createChatCompletion = async (messages, model = 'gpt-4o-mini') => {
+export const createChatCompletion = async (messages, model = 'gpt-5-mini') => {
   if (!OPENAI_API_KEY) {
     throw new Error('OpenAI API Key가 설정되지 않았습니다. VITE_OPENAI_API_KEY를 확인하세요.')
   }
@@ -61,8 +61,8 @@ ${dataContext}`
       {
         model,
         messages: payloadMessages,
-        temperature: 0.7,
-        max_tokens: 500
+        reasoning_effort: 'low',
+        max_completion_tokens: 4000
       },
       {
         headers: {
