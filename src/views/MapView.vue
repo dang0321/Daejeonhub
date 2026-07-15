@@ -132,6 +132,27 @@ const loadPlaces = async () => {
 
 // ===== 경로 계산 기능 =====
 const routePoints = ref([])   // 경로에 담은 장소들 (순서 있음)
+// ===== 경로 검색 기능 =====
+const allPlaces = ref([])       // 전체 장소 (검색용)
+const searchKeyword = ref('')
+
+// 전체 장소 로드 (검색용, 한 번만)
+const loadAllPlaces = async () => {
+  try {
+    allPlaces.value = await getPlacesByCategory('all')
+  } catch {
+    allPlaces.value = []
+  }
+}
+
+// 검색 결과 (이름에 키워드 포함, 최대 8개)
+const searchResults = computed(() => {
+  const kw = searchKeyword.value.trim().toLowerCase()
+  if (!kw) return []
+  return allPlaces.value
+    .filter((p) => p.title && p.title.toLowerCase().includes(kw))
+    .slice(0, 8)
+})
 let routePolyline = null      // 지도에 그린 경로 선
 
 // 두 지점 직선거리(km)
@@ -161,14 +182,18 @@ const routeSummary = computed(() => {
 
 // 경로에 장소 추가 (중복 방지)
 const addToRoute = (place) => {
-  if (routePoints.value.some((p) => p.contentid === place.contentid)) return
+  const pts = routePoints.value
+  // 바로 직전 지점과 같은 장소면 무시 (의미 없는 연속 중복 방지)
+  if (pts.length > 0 && pts[pts.length - 1].contentid === place.contentid) return
   routePoints.value.push(place)
   drawRoute()
 }
 
 // 경로에서 장소 제거
-const removeFromRoute = (id) => {
-  routePoints.value = routePoints.value.filter((p) => p.contentid !== id)
+// 경로에서 특정 순번 제거
+const removeFromRoute = (index) => {
+  routePoints.value.splice(index, 1)
+  routePoints.value = [...routePoints.value]
   drawRoute()
 }
 
@@ -219,6 +244,7 @@ onMounted(async () => {
     })
     map.value.setZoomable(false)
     await loadPlaces()
+    await loadAllPlaces()      // 검색용 전체 장소 로드
   } catch (error) {
     errorMessage.value = error.message || '지도를 초기화하지 못했습니다.'
     loading.value = false
@@ -281,14 +307,31 @@ onBeforeUnmount(clearMarkers)
       </div>
     </div>
 
-    <div v-if="routePoints.length > 0" class="route-panel">
+    <div class="route-panel">
       <div class="route-header">
         <h3>경로 계산 ({{ routePoints.length }}곳)</h3>
-        <button class="route-clear" @click="clearRoute">전체 초기화</button>
+        <button v-if="routePoints.length > 0" class="route-clear" @click="clearRoute">전체 초기화</button>
+      </div>
+
+      <div class="route-search">
+        <input
+          v-model="searchKeyword"
+          type="text"
+          placeholder="장소 이름으로 검색해서 추가 (예: 성심당)"
+        />
+        <ul v-if="searchResults.length > 0" class="search-results">
+          <li v-for="r in searchResults" :key="r.contentid">
+            <span class="sr-name">{{ r.title }}
+              <span class="sr-cat">({{ CATEGORIES[r.category]?.label }})</span>
+            </span>
+            <button class="sr-add" @click="addToRoute(r)">＋</button>
+          </li>
+        </ul>
+        <p v-else-if="searchKeyword.trim()" class="sr-empty">검색 결과가 없습니다.</p>
       </div>
 
       <ol class="route-list">
-        <li v-for="(p, i) in routePoints" :key="p.contentid">
+        <li v-for="(p, i) in routePoints" :key="`${p.contentid}-${i}`">
           <span class="route-role">
             {{ i === 0 ? '출발' : i === routePoints.length - 1 ? '도착' : '경유' }}
           </span>
@@ -296,7 +339,7 @@ onBeforeUnmount(clearMarkers)
           <span class="route-actions">
             <button @click="moveRoutePoint(i, -1)" :disabled="i === 0">▲</button>
             <button @click="moveRoutePoint(i, 1)" :disabled="i === routePoints.length - 1">▼</button>
-            <button @click="removeFromRoute(p.contentid)">✕</button>
+            <button @click="removeFromRoute(i)">✕</button>
           </span>
         </li>
       </ol>
@@ -517,4 +560,30 @@ onBeforeUnmount(clearMarkers)
 .route-summary { padding: 12px; background: #eff6ff; border-radius: 8px; font-size: 15px; font-weight: 600; color: #1e40af; }
 .route-note { margin: 8px 0 0; font-size: 12px; font-weight: 400; color: #64748b; line-height: 1.5; }
 .route-hint { font-size: 13px; color: #94a3b8; }
+
+.route-search { margin-bottom: 12px; }
+.route-search input {
+  width: 100%; box-sizing: border-box;
+  border: 1px solid #d1d5db; border-radius: 8px;
+  padding: 8px 12px; font-size: 14px;
+}
+.search-results {
+  list-style: none; padding: 0; margin: 8px 0 0;
+  border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;
+}
+.search-results li {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px; border-bottom: 1px solid #f1f5f9;
+}
+.search-results li:last-child { border-bottom: none; }
+.sr-name { font-size: 14px; }
+.sr-cat { color: #94a3b8; font-size: 12px; }
+.sr-add {
+  width: 28px; height: 28px; border: 1px solid #2563eb;
+  background: #fff; color: #2563eb; border-radius: 6px;
+  cursor: pointer; font-size: 15px;
+}
+.sr-add:hover { background: #2563eb; color: #fff; }
+.sr-empty { margin: 8px 0 0; font-size: 13px; color: #94a3b8; }
+
 </style>
