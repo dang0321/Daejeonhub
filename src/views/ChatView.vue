@@ -2,12 +2,29 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { createChatCompletion } from '../services/chatServices'
 
-const messages = ref([
+const STORAGE_KEY = 'localhub_chat_history'
+
+const defaultMessages = () => [
   {
     role: 'assistant',
     content: '안녕하세요! 대전·충청권 여행이나 관광 정보에 대해 무엇이든 물어보세요.'
   }
-])
+]
+
+const loadMessages = () => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (saved) {
+      const parsed = JSON.parse(saved)
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed
+    }
+  } catch {
+    // 파싱 실패 시 기본값
+  }
+  return defaultMessages()
+}
+
+const messages = ref(loadMessages())
 
 const inputMessage = ref('')
 const isLoading = ref(false)
@@ -69,14 +86,18 @@ const handleKeydown = (event) => {
   }
 }
 
+watch(messages, (newMessages) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(newMessages))
+  } catch {
+    // 저장 실패 무시
+  }
+}, { deep: true })
+
 const clearChat = () => {
-  messages.value = [
-    {
-      role: 'assistant',
-      content: '안녕하세요! 대전·충청권 여행이나 관광 정보에 대해 무엇이든 물어보세요.'
-    }
-  ]
+  messages.value = defaultMessages()
   errorMessage.value = ''
+  localStorage.removeItem(STORAGE_KEY)   // 저장된 것도 삭제
   nextTick(scrollToBottom)
 }
 </script>
