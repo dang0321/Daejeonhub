@@ -1,8 +1,6 @@
 <template>
   <div class="board-page">
-    <!-- 상단 '게시판' 헤더 영역: 2단 구조로 고정하여 모든 화면에서 완벽한 간격 유지 -->
     <header class="board-header">
-      <!-- 1층: 타이틀과 우측 액션 버튼 -->
       <div class="header-first-row">
         <h1>게시판</h1>
         <div class="header-right">
@@ -25,7 +23,6 @@
         </div>
       </div>
 
-      <!-- 2층: 카테고리와 검색창 (상세/수정/글쓰기 상태에서도 높이와 간격을 유지하여 덜컥거림 완벽 방지) -->
       <div 
         class="header-second-row" 
         :class="{ 'hide-layout': selectedBoard || isCreating || isEditing }"
@@ -58,7 +55,6 @@
       </div>
     </header>
 
-    <!-- 1. 목록 화면 (넓은 레이아웃 사용) -->
     <section class="board-content list-layout" v-if="!selectedBoard && !isCreating && !isEditing">
       <section class="board-list-wrapper">
         <div v-if="filteredBoards.length === 0" class="empty-state">
@@ -114,7 +110,6 @@
           </ul>
         </div>
 
-        <!-- 페이지네이션 -->
         <div v-if="filteredBoards.length > 0" class="pagination">
           <button type="button" class="page-button" :disabled="currentPage === 1" @click="goToPage(1)">
             ««
@@ -144,7 +139,6 @@
       </section>
     </section>
 
-    <!-- 2. 상세보기 화면 (중앙으로 모인 컴팩트 레이아웃) -->
     <section class="board-content detail-layout" v-else-if="selectedBoard && !isCreating && !isEditing">
       <section class="board-detail">
         <div class="detail-card">
@@ -181,7 +175,6 @@
             <p class="detail-content">{{ selectedBoard.content }}</p>
           </div>
 
-          <!-- 하단 액션바 -->
           <div class="detail-actions">
             <button 
               type="button" 
@@ -198,18 +191,67 @@
               <button class="danger-button" type="button" @click="confirmDelete">삭제</button>
             </div>
           </div>
+
+          <div class="comment-section">
+            <h4 class="comment-section-title">댓글 {{ comments.length }}</h4>
+            
+            <div v-if="comments.length === 0" class="comment-empty">
+              등록된 댓글이 없습니다. 첫 댓글을 남겨보세요!
+            </div>
+            <div v-else class="comment-list">
+              <div v-for="c in comments" :key="c.id" class="comment-item">
+                <div class="comment-item-header">
+                  <span class="comment-item-author">{{ c.nickname }}</span>
+                  <span class="comment-item-date">{{ formatDate(c.createdAt) }}</span>
+                  <button type="button" class="comment-delete-btn" @click="handleDeleteComment(c.id)">
+                    삭제
+                  </button>
+                </div>
+                <p class="comment-item-content">{{ c.content }}</p>
+              </div>
+            </div>
+
+            <form class="comment-form" @submit.prevent="submitComment">
+              <div class="comment-form-meta">
+                <input 
+                  v-model="newComment.nickname" 
+                  type="text" 
+                  required 
+                  maxlength="15" 
+                  placeholder="닉네임" 
+                  class="comment-meta-input"
+                />
+                <input 
+                  v-model="newComment.password" 
+                  type="password" 
+                  required 
+                  maxlength="20" 
+                  placeholder="비밀번호" 
+                  class="comment-meta-input"
+                />
+              </div>
+              <div class="comment-form-body">
+                <textarea 
+                  v-model="newComment.content" 
+                  required 
+                  maxlength="500" 
+                  placeholder="댓글 내용을 입력해 주세요" 
+                  class="comment-textarea"
+                ></textarea>
+                <button type="submit" class="primary-button comment-submit-btn">등록</button>
+              </div>
+            </form>
+          </div>
         </div>
       </section>
     </section>
 
-    <!-- 3. 상세조회 디자인과 100% 동일하게 일치시킨 글쓰기/수정 화면 (중앙으로 모인 컴팩트 레이아웃) -->
     <section class="board-content detail-layout" v-else>
       <form class="board-detail" @submit.prevent="submitForm">
         <div class="detail-card">
           <div class="detail-heading">
-            <!-- 1) 배너 및 제목부 -->
             <div class="detail-title-wrap">
-              <span class="board-list-category detail-badge editor-category-badge" :class="getCategoryClass(form.category)">
+              <span class="board-list-category detail-badge" :class="getCategoryClass(form.category)">
                 {{ form.category }}
                 <select v-model="form.category" class="editor-select-overlay">
                   <option
@@ -231,7 +273,6 @@
               />
             </div>
             
-            <!-- 2) 작성자 및 비밀번호부 -->
             <div class="detail-meta-wrap">
               <span class="detail-meta-item">
                 <span class="meta-label">작성자</span>
@@ -260,7 +301,6 @@
             </div>
           </div>
 
-          <!-- 본문 입력 영역 -->
           <div class="detail-body">
             <textarea 
               v-model="form.content" 
@@ -272,7 +312,6 @@
             ></textarea>
           </div>
 
-          <!-- 하단 버튼 영역 -->
           <div class="detail-actions">
             <button class="secondary-button" type="button" @click="cancelForm">취소</button>
             <button class="primary-button" type="submit">저장</button>
@@ -291,7 +330,11 @@ import {
   updateBoard,
   deleteBoard,
   toggleLike,
-  incrementViews
+  incrementViews,
+  // [신규 추가] boardService에서 구현한 댓글 API 호출 가져오기
+  getComments,
+  addComment,
+  deleteComment
 } from '../services/boardService'
 
 const searchTerm = ref('')
@@ -315,6 +358,14 @@ const currentPage = ref(1)
 
 const userLikedPostIds = ref([])
 const viewedPostIds = ref([])
+
+// [신규 추가] 댓글 데이터를 담아둘 상태 변수
+const comments = ref([])
+const newComment = ref({
+  nickname: '',
+  password: '',
+  content: ''
+})
 
 onMounted(() => {
   const savedLikes = localStorage.getItem('user-liked-posts')
@@ -442,6 +493,12 @@ function refreshBoards() {
   boards.value = listBoards()
 }
 
+// [신규 추가] 특정 게시글의 댓글을 리로드하는 전용 함수
+function loadComments() {
+  if (!selectedId.value) return
+  comments.value = getComments(selectedId.value)
+}
+
 function selectBoard(id) {
   selectedId.value = id
   isCreating.value = false
@@ -453,6 +510,9 @@ function selectBoard(id) {
     sessionStorage.setItem('user-viewed-posts', JSON.stringify(viewedPostIds.value))
     refreshBoards()
   }
+
+  // [신규 추가] 상세 글을 들어갈 때 해당 글에 작성된 댓글 로드
+  loadComments()
 }
 
 function clearSelection() {
@@ -585,6 +645,38 @@ function handleLikeToggle() {
 
   localStorage.setItem('user-liked-posts', JSON.stringify(userLikedPostIds.value))
   refreshBoards()
+}
+
+// [신규 추가] 댓글 등록 함수
+function submitComment() {
+  if (!newComment.value.nickname.trim() || !newComment.value.password.trim() || !newComment.value.content.trim()) {
+    alert('닉네임, 비밀번호, 내용을 모두 작성해주세요.')
+    return
+  }
+
+  addComment(selectedId.value, {
+    nickname: newComment.value.nickname.trim(),
+    password: newComment.value.password.trim(),
+    content: newComment.value.content.trim()
+  })
+
+  // 등록 완료 후 폼 비우기 및 새로고침
+  newComment.value = { nickname: '', password: '', content: '' }
+  loadComments()
+}
+
+// [신규 추가] 댓글 삭제 함수
+function handleDeleteComment(commentId) {
+  const password = prompt('댓글을 삭제하려면 비밀번호를 입력하세요.')
+  if (!password) return
+
+  const success = deleteComment(commentId, password)
+  if (!success) {
+    alert('비밀번호가 일치하지 않거나 존재하지 않는 댓글입니다.')
+    return
+  }
+
+  loadComments()
 }
 </script>
 
@@ -803,8 +895,7 @@ function handleLikeToggle() {
   background: var(--accent-bg);
 }
 
-/* 
-  👇 [수정된 디자인 영역] 
+/* 👇 [수정된 디자인 영역] 
   카테고리, 제목 제외 모든 텍스트 요소를 투명도 80(0.8)으로 일괄 통일 
 */
 .board-item-seq {
@@ -1195,6 +1286,159 @@ function handleLikeToggle() {
   text-align: center;
 }
 
+/* 👇 [신규 디자인 추가 영역] 
+  원래 카드 내부 분위기 및 컬러 시스템(CSS 변수)과 호환되는 댓글 고유 디자인 스타일 
+*/
+.comment-section {
+  margin-top: 32px;
+  padding-top: 28px;
+  border-top: 1px solid var(--border);
+}
+
+.comment-section-title {
+  margin: 0 0 16px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-h);
+  font-family: var(--heading);
+}
+
+.comment-empty {
+  padding: 24px 8px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--text);
+  opacity: 0.55;
+}
+
+.comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.comment-item {
+  padding-bottom: 16px;
+  border-bottom: 1px dashed var(--border);
+}
+
+.comment-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.comment-item-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.comment-item-author {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.comment-item-date {
+  font-size: 0.78rem;
+  color: var(--text);
+  opacity: 0.55;
+}
+
+.comment-delete-btn {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  opacity: 0.5;
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 2px 4px;
+  font-family: var(--sans);
+  transition: opacity 0.2s;
+}
+
+.comment-delete-btn:hover {
+  opacity: 1;
+  color: var(--point, #ff1744);
+}
+
+.comment-item-content {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--text);
+  white-space: pre-wrap;
+}
+
+/* 댓글 입력 폼 스타일 */
+.comment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: var(--accent-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.comment-form-meta {
+  display: flex;
+  gap: 10px;
+}
+
+.comment-meta-input {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.8rem;
+  outline: none;
+  font-family: var(--sans);
+  width: 120px;
+}
+
+.comment-meta-input:focus {
+  border-color: var(--sub);
+}
+
+.comment-form-body {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.comment-textarea {
+  flex: 1;
+  height: 60px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  outline: none;
+  resize: none;
+  font-family: var(--sans);
+}
+
+.comment-textarea:focus {
+  border-color: var(--sub);
+}
+
+.comment-submit-btn {
+  padding: 0 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
 /* 반응형 스타일 */
 @media (max-width: 900px) {
   .board-table-header {
@@ -1324,6 +1568,20 @@ function handleLikeToggle() {
     flex-direction: row; 
     justify-content: space-between;
     width: 100%;
+  }
+
+  /* 댓글 반응형 스타일 추가 */
+  .comment-form-body {
+    flex-direction: column;
+  }
+
+  .comment-textarea {
+    height: 80px;
+  }
+
+  .comment-submit-btn {
+    padding: 10px;
+    text-align: center;
   }
 }
 </style>

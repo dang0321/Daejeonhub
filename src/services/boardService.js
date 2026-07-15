@@ -280,7 +280,7 @@ const DEFAULT_BOARDS = [
     content: `신탄진역 근처에 조용히 자리 잡은 찐 노포 중식당 영화반점 다녀왔습니다.
 
 짬뽕은 불향 가득하면서 고기와 채소가 듬뿍 들어가 국물이 텁텁하지 않고 아주 깔끔하게 매콤합니다.
-이 집의 찐 비결은 면을 다 먹고 주문하는 '볶음공기밥'이에요. 일반 공기밥이 아니라 미리 고슬고슬 볶아둔 볶음밥을 주시는데, 이걸 남은 짬뽕 국물에 말아 먹으면 고소한 기름과 매콤한 국물이 섞여 정말 기막힌 맛을 냅니다.
+이 집의 찐 비결은 면을 다 먹고 주문하는 '볶음공기밥'이에요. 일반 공기밥이 아니라 미리 고슬고슬 볶아둔 볶음밥을 주시는데, 이걸 남은 짬뽕 국물에 말아 먹으면 고소한 기름 and 매콤한 국물이 섞여 정말 기막힌 맛을 냅니다.
 
 멀리서도 찾아와서 먹을 가치가 충분한 숨은 로컬 맛집입니다!`,
     password: "1234",
@@ -697,4 +697,91 @@ export function toggleLike(id, isAdding) {
 
   saveBoards(boards)
   return board
+}
+
+// ==================== [댓글 비즈니스 로직 영역] ====================
+
+const COMMENT_STORAGE_KEY = 'vue3-board-comments';
+
+/**
+ * 특정 게시글의 댓글 목록 조회 (안전성 강화 및 오름차순 정렬)
+ */
+export function getComments(boardId) {
+  const raw = localStorage.getItem(COMMENT_STORAGE_KEY);
+  let comments = [];
+  
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      comments = Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      console.warn('boardService: comment localStorage parse failed', error);
+      comments = [];
+    }
+  }
+
+  return comments
+    .filter(c => c.boardId === boardId)
+    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+}
+
+/**
+ * 댓글 등록 (buildId() 함수를 활용한 ID 고유성 보장 및 무결성 예외 처리)
+ */
+export function addComment(boardId, { nickname, content, password }) {
+  const raw = localStorage.getItem(COMMENT_STORAGE_KEY);
+  let comments = [];
+
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      comments = Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      comments = [];
+    }
+  }
+
+  const newComment = {
+    id: buildId(), // 👈 안전하고 정밀하게 설계된 내부의 buildId() 함수 결합
+    boardId,
+    nickname: nickname.trim(),
+    content: content.trim(),
+    password: String(password).trim(),
+    createdAt: new Date().toISOString()
+  };
+
+  comments.push(newComment);
+  localStorage.setItem(COMMENT_STORAGE_KEY, JSON.stringify(comments));
+  return newComment;
+}
+
+/**
+ * 댓글 삭제 (예외 상황 차단 및 암호 비교 무결성 강화)
+ */
+export function deleteComment(commentId, password) {
+  const raw = localStorage.getItem(COMMENT_STORAGE_KEY);
+  let comments = [];
+
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      comments = Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      return false;
+    }
+  }
+
+  const index = comments.findIndex(c => c.id === commentId);
+  if (index === -1) {
+    return false;
+  }
+
+  // 비밀번호 공백 제거 및 String 엄격 비교
+  if (String(comments[index].password).trim() !== String(password).trim()) {
+    return false;
+  }
+
+  comments.splice(index, 1);
+  localStorage.setItem(COMMENT_STORAGE_KEY, JSON.stringify(comments));
+  return true;
 }
