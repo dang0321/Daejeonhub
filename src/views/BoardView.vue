@@ -135,7 +135,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import {
   listBoards,
   createBoard,
@@ -186,6 +186,10 @@ const selectedBoard = computed(() => {
 const modalTitle = computed(() =>
   modalMode.value === 'create' ? '게시글 작성' : '게시글 수정'
 )
+
+watch(searchTerm, () => {
+  currentPage.value = 1
+})
 
 function formatDate(value) {
   return new Date(value).toLocaleString('ko-KR', {
