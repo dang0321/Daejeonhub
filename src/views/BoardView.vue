@@ -256,10 +256,18 @@
       <form class="board-detail" @submit.prevent="submitForm">
         <div class="detail-card">
           <div class="detail-heading">
-            <div class="detail-title-wrap">
-              <span class="board-list-category detail-badge" :class="getCategoryClass(form.category)">
-                {{ form.category }}
-                <select v-model="form.category" class="editor-select-overlay">
+            <div class="detail-title-wrap" style="display: flex; align-items: center; gap: 8px; width: 100%;">
+              
+              <span 
+                class="board-list-category detail-badge" 
+                :class="getCategoryClass(form.category)" 
+                style="position: relative; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden;"
+              >
+                {{ form.category }} ▾
+                <select 
+                  v-model="form.category" 
+                  style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; margin: 0; padding: 0;"
+                >
                   <option
                     v-for="category in categories.filter(c => c !== '전체')"
                     :key="category"
@@ -269,6 +277,7 @@
                   </option>
                 </select>
               </span>
+
               <input 
                 v-model="form.title" 
                 type="text" 
@@ -276,6 +285,7 @@
                 maxlength="100" 
                 placeholder="제목을 입력하세요"
                 class="editor-title-input" 
+                style="flex-grow: 1;"
               />
             </div>
             
@@ -302,6 +312,7 @@
                   maxlength="20" 
                   placeholder="비밀번호 입력"
                   class="editor-meta-input" 
+                  style="width: 120px; padding: 4px 8px; font-size: 0.9rem;" 
                 />
               </span>
             </div>
