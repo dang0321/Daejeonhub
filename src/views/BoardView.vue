@@ -198,12 +198,14 @@
             </div>
           </div>
 
-          <div class="comment-section">
-            <h4 class="comment-section-title">댓글 {{ comments.length }}</h4>
-            
-            <div v-if="comments.length === 0" class="comment-empty">
-              등록된 댓글이 없습니다. 첫 댓글을 남겨보세요!
-            </div>
+          <div class="comment-section" style="margin-top: 24px; border-top: 1px solid #eee; padding-top: 16px;">
+  <h4 class="comment-section-title" style="font-size: 0.85rem; font-weight: 500; color: #777; margin: 0 0 12px 4px; text-align: left;">
+    댓글 {{ comments.length }}
+  </h4>
+  
+  <div v-if="comments.length === 0" class="comment-empty" style="padding: 16px 4px; text-align: left; color: #999; font-size: 0.9rem;">
+    등록된 댓글이 없습니다. 첫 댓글을 남겨보세요!
+  </div>
             <div v-else class="comment-list">
               <div v-for="c in comments" :key="c.id" class="comment-item">
                 <div class="comment-item-header">
@@ -213,7 +215,9 @@
                     삭제
                   </button>
                 </div>
-                <p class="comment-item-content">{{ c.content }}</p>
+                <p class="comment-item-content" style="text-align: left; margin: 4px 0 0 0; line-height: 1.4; white-space: pre-wrap; word-break: break-word;">
+                  {{ c.content }}
+                </p>
               </div>
             </div>
 
