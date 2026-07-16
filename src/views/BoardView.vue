@@ -171,8 +171,10 @@
             </div>
           </div>
 
-          <div class="detail-body">
-            <p class="detail-content">{{ selectedBoard.content }}</p>
+          <div class="detail-body" style="padding: 24px 8px; border-top: 1px solid #eee; border-bottom: 1px solid #eee; margin: 20px 0;">
+            <p class="detail-content" style="font-size: 1.05rem; line-height: 1.75; color: #333; white-space: pre-wrap; word-break: break-word; margin: 0; letter-spacing: -0.02em;">
+              {{ selectedBoard.content }}
+            </p>
           </div>
 
           <div class="detail-actions">
