@@ -183,9 +183,13 @@
               class="like-button" 
               :class="{ liked: isCurrentPostLiked }" 
               @click="handleLikeToggle"
+              style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 20px; border: 1px solid #ddd; background-color: #fff; cursor: pointer; font-size: 0.95rem; transition: all 0.2s ease;"
             >
-              <span class="like-label">좋아요</span>
-              <span class="like-count">{{ selectedBoard.likes || 0 }}</span>
+              <span class="like-icon" style="font-size: 1.1rem; line-height: 1;">
+                {{ isCurrentPostLiked ? '💚' : '🩶' }}
+              </span>
+              <span class="like-label" style="font-weight: 500; color: #555;">좋아요</span>
+              <span class="like-count" style="font-weight: bold; color: #333;">{{ selectedBoard.likes || 0 }}</span>
             </button>
 
             <div class="right-actions">
