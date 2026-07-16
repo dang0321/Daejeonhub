@@ -1,7 +1,6 @@
 import { ref, onMounted } from 'vue'
 
 const BOARD_STORAGE_KEY = 'vue3-board-items'
-const LIKED_POSTS_STORAGE_KEY = 'user-liked-posts'
 
 const DATA_FILES = [
   { key: 'tourism', label: '관광지', path: '/data/대전_충청권_관광지.json' },
@@ -47,8 +46,8 @@ const getBoardPostCount = () => {
 }
 
 const getTotalLikes = () => {
-  const likedPosts = readLocalStorageArray(LIKED_POSTS_STORAGE_KEY)
-  return likedPosts.length
+  const boards = readLocalStorageArray(BOARD_STORAGE_KEY)
+  return boards.reduce((sum, board) => sum + (Number(board?.likes) || 0), 0)
 }
 
 export const fetchDashboardStats = async () => {
