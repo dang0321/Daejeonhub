@@ -142,30 +142,30 @@
     <section class="board-content detail-layout" v-else-if="selectedBoard && !isCreating && !isEditing">
       <section class="board-detail">
         <div class="detail-card">
-          <div class="detail-heading">
-            <div class="detail-title-wrap">
-              <span class="board-list-category detail-badge" :class="getCategoryClass(selectedBoard.category)">
+          <div class="detail-heading" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+            <div class="detail-title-wrap" style="display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0;">
+              <span class="board-list-category detail-badge" :class="getCategoryClass(selectedBoard.category)" style="flex-shrink: 0;">
                 {{ selectedBoard.category }}
               </span>
-              <h3 class="detail-title-text">
-                <span class="detail-title-seq">#{{ selectedBoard.seq }}</span>
+              <h3 class="detail-title-text" style="margin: 0; font-size: 1.25rem; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; min-width: 0;">
+                <span class="detail-title-seq" style="margin-right: 4px;">#{{ selectedBoard.seq }}</span>
                 {{ selectedBoard.title }}
               </h3>
             </div>
             
-            <div class="detail-meta-wrap">
+            <div class="detail-meta-wrap" style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; width: 100%; font-size: 0.875rem; color: #666;">
               <span class="detail-meta-item">
-                <span class="meta-label">작성자</span>
-                <span class="meta-value-author">{{ selectedBoard.nickname }}</span>
+                <span class="meta-label" style="margin-right: 4px;">작성자</span>
+                <span class="meta-value-author" style="font-weight: 500;">{{ selectedBoard.nickname }}</span>
               </span>
-              <span class="detail-meta-divider">|</span>
+              <span class="detail-meta-divider" style="color: #ccc;">|</span>
               <span class="detail-meta-item">
-                <span class="meta-label">조회수</span>
+                <span class="meta-label" style="margin-right: 4px;">조회수</span>
                 <span class="meta-value-author">{{ selectedBoard.views || 0 }}</span>
               </span>
-              <span class="detail-meta-divider">|</span>
+              <span class="detail-meta-divider" style="color: #ccc;">|</span>
               <span class="detail-meta-item">
-                <span class="meta-label">등록일</span>
+                <span class="meta-label" style="margin-right: 4px;">등록일</span>
                 <span class="meta-value-date">{{ formatFullDate(selectedBoard.createdAt) }}</span>
               </span>
             </div>
