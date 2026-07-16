@@ -3,12 +3,18 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
+import symbolEast from '../assets/icons/symbol_east.png'
+import symbolMiddle from '../assets/icons/symbol_middle2.png'
+import symbolWest from '../assets/icons/symbol_west2.png'
+import symbolU from '../assets/icons/symbol_u.png'
+import symbolDaedeok from '../assets/icons/symbol_dae2.png'
+
 const regions = [
-  { name: '동구', slug: 'donggu', description: '대전 동부의 문화와 생활공간', icon: '/src/assets/icons/symbol_east.png' },
-  { name: '중구', slug: 'junggu', description: '대전 중심부의 역사와 상권', icon: '/src/assets/icons/symbol_middle2.png' },
-  { name: '서구', slug: 'seogu', description: '대전 서부의 주거와 산업의 중심', icon: '/src/assets/icons/symbol_west2.png' },
-  { name: '유성구', slug: 'yuseonggu', description: '대전 북서부 · 관광지 밀집', icon: '/src/assets/icons/symbol_u.png' },
-  { name: '대덕구', slug: 'daeduckgu', description: '대전 북부의 과학·산업 도시', icon: '/src/assets/icons/symbol_dae2.png' }
+  { name: '동구', slug: 'donggu', description: '대전 동부의 문화와 생활공간', icon: symbolEast },
+  { name: '중구', slug: 'junggu', description: '대전 중심부의 역사와 상권', icon: symbolMiddle },
+  { name: '서구', slug: 'seogu', description: '대전 서부의 주거와 산업의 중심', icon: symbolWest },
+  { name: '유성구', slug: 'yuseonggu', description: '대전 북서부 · 관광지 밀집', icon: symbolU },
+  { name: '대덕구', slug: 'daeduckgu', description: '대전 북부의 과학·산업 도시', icon: symbolDaedeok }
 ]
 
 const services = [
