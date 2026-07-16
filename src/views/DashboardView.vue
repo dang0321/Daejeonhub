@@ -73,7 +73,6 @@ onMounted(async () => {
 <style scoped>
 .dashboard-page {
   padding: 24px;
-  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
   min-height: 100%;
 }
 
